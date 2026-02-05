@@ -47,10 +47,7 @@ html, body {
     user-select: none;
     -webkit-user-select: none;
     perspective: var(--perspective);
-    /* 📱 移动端触摸优化 */
-    touch-action: manipulation;
     -webkit-touch-callout: none;
-    -ms-touch-action: manipulation;
 }
 
 body {
@@ -291,7 +288,12 @@ body {
 /* ==================== 开始页面3D ==================== */
 #start-screen {
     background: var(--gradient-festive);
-    overflow: hidden;
+    /* 📱 移动端允许滚动 */
+    display: block !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 
 .festive-overlay {
@@ -372,9 +374,10 @@ body {
     position: relative;
     z-index: 10;
     text-align: center;
-    padding: 20px;
+    padding: 20px 20px 40px 20px;
     max-width: 450px;
     width: 95%;
+    margin: 0 auto;
     transform-style: preserve-3d;
 }
 
@@ -3021,13 +3024,11 @@ body {
     width: 100%;
     max-width: 420px;
     margin: 0 auto;
-    padding: 20px 15px;
-    min-height: 100vh;
+    padding: 20px 15px 40px 15px;
+    min-height: auto;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 /* ===== 第一区块：核心成绩 ===== */
