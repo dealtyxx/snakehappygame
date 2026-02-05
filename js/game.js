@@ -1313,7 +1313,8 @@ class Player {
 
         this.width = isTinyMobile ? 40 : (isSmallMobile ? 45 : (isMobile ? 50 : 70));
         this.height = this.width;
-        this.bottomOffset = isTinyMobile ? 62 : (isSmallMobile ? 72 : (isMobile ? 84 : 24));
+        // 📱 移动端小蛇往下挪动一点
+        this.bottomOffset = isTinyMobile ? 45 : (isSmallMobile ? 55 : (isMobile ? 65 : 24));
         this.edgePadding = isTinyMobile ? 2 : (isSmallMobile ? 3 : (isMobile ? 4 : 0));
         this.speed = isMobile ? 9 : CONFIG.PLAYER_SPEED;
 

@@ -4334,10 +4334,14 @@ body {
         font-size: 1.3rem;
     }
 
-    /* 开始按钮 */
+    /* 开始按钮 - 保持高亮效果 */
     .btn-start-3d {
         padding: 15px 40px;
         font-size: 1.2rem;
+        /* 📱 移动端保持高亮脉冲动画 */
+        animation: btnGlowPulse 1.5s ease-in-out infinite !important;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 40%, #FFD700 60%, #FFEC8B 100%) !important;
+        border: 3px solid #FFD700 !important;
     }
 
     .btn-content {
