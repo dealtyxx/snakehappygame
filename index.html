@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>蛇年接福 - 湖南信息学院计算机科学与工程学院</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 背景音乐 - 随机加载assets文件夹中的音乐 -->
+    <audio id="bgm" loop preload="auto"></audio>
+
+    <!-- 屏幕闪光效果 -->
+    <div id="screen-flash" class="screen-flash"></div>
+
+    <!-- 加载页面 -->
+    <div id="loading-screen" class="screen active">
+        <div class="loading-3d-container">
+            <div class="loading-content">
+                <div class="loading-snake-3d">
+                    <div class="snake-shadow"></div>
+                    <span class="snake-emoji">🐍</span>
+                </div>
+                <div class="loading-text">
+                    <span class="char-3d">福</span>
+                    <span class="char-3d">气</span>
+                    <span class="char-3d">加</span>
+                    <span class="char-3d">载</span>
+                    <span class="char-3d">中</span>
+                    <span class="dots">...</span>
+                </div>
+                <div class="loading-bar-3d">
+                    <div class="loading-progress-3d"></div>
+                    <div class="loading-glow"></div>
+                </div>
+                <div class="college-loading">湖南信息学院 · 计算机科学与工程学院</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 开始页面 -->
+    <div id="start-screen" class="screen">
+        <canvas id="bg-canvas-3d"></canvas>
+        <div class="festive-overlay"></div>
+
+        <!-- 3D装饰层 -->
+        <div class="decoration-layer">
+            <!-- 顶部灯笼串 -->
+            <div class="lantern-string">
+                <div class="lantern-3d" style="--delay: 0s; --size: 0.8"></div>
+                <div class="lantern-3d" style="--delay: 0.2s; --size: 1"></div>
+                <div class="lantern-3d" style="--delay: 0.4s; --size: 1.2"></div>
+                <div class="lantern-3d" style="--delay: 0.6s; --size: 1"></div>
+                <div class="lantern-3d" style="--delay: 0.8s; --size: 0.8"></div>
+            </div>
+
+            <!-- 飘落的福字 -->
+            <div class="floating-fu" id="floating-fu"></div>
+
+            <!-- 烟花粒子 -->
+            <div class="firework-particles" id="menu-fireworks"></div>
+        </div>
+
+        <div class="content-3d">
+            <!-- 学院标识 -->
+            <div class="college-badge">
+                <div class="badge-inner">
+                    <div class="badge-icon">🎓</div>
+                    <div class="badge-text">
+                        <div class="college-name">湖南信息学院</div>
+                        <div class="department-name">计算机科学与工程学院</div>
+                    </div>
+                </div>
+                <div class="badge-glow"></div>
+            </div>
+
+            <!-- 3D标题 -->
+            <div class="title-3d-container">
+                <div class="year-ribbon">
+                    <span class="ribbon-text">🐍 2025 乙巳蛇年 🐍</span>
+                    <div class="ribbon-shine"></div>
+                </div>
+                <h1 class="game-title-3d">
+                    <span class="title-char-3d" data-char="蛇">蛇</span>
+                    <span class="title-char-3d" data-char="年">年</span>
+                    <span class="title-char-3d" data-char="接">接</span>
+                    <span class="title-char-3d" data-char="福">福</span>
+                </h1>
+                <div class="title-reflection"></div>
+            </div>
+
+            <!-- 动态蛇形Logo -->
+            <div class="snake-logo-3d">
+                <div class="snake-body-3d">
+                    <span class="segment" style="--i:0">🐍</span>
+                </div>
+                <div class="snake-glow"></div>
+            </div>
+
+            <!-- 最高分展示 -->
+            <div class="high-score-card-3d">
+                <div class="card-face">
+                    <span class="trophy">🏆</span>
+                    <span class="hs-label">最高纪录</span>
+                    <span id="high-score" class="hs-value">0</span>
+                    <span class="hs-unit">分</span>
+                </div>
+                <div class="card-shine"></div>
+            </div>
+
+            <!-- 玩法卡片3D -->
+            <div class="instruction-card-3d">
+                <div class="card-header-3d">
+                    <span class="header-icon">🎮</span>
+                    <span class="header-text">玩法说明</span>
+                    <span class="header-icon">🎮</span>
+                </div>
+                <div class="card-body-3d">
+                    <div class="item-row">
+                        <div class="item-3d positive">
+                            <div class="item-emoji">🧧💰🧨</div>
+                            <div class="item-label">接住得分</div>
+                            <div class="item-glow green"></div>
+                        </div>
+                        <div class="item-3d special">
+                            <div class="item-emoji">🀄</div>
+                            <div class="item-label">福字无敌</div>
+                            <div class="item-glow gold"></div>
+                        </div>
+                        <div class="item-3d bonus">
+                            <div class="item-emoji">⭐🎓</div>
+                            <div class="item-label">双倍加成</div>
+                            <div class="item-glow purple"></div>
+                        </div>
+                        <div class="item-3d negative">
+                            <div class="item-emoji">👻</div>
+                            <div class="item-label">躲避扣分</div>
+                            <div class="item-glow red"></div>
+                        </div>
+                    </div>
+                    <div class="combo-tip">
+                        <span class="fire-icon">🔥</span>
+                        <span>连续接住触发连击，最高3倍加成！</span>
+                        <span class="fire-icon">🔥</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3D开始按钮 -->
+            <button id="start-btn" class="btn-start-3d">
+                <div class="btn-content">
+                    <span class="btn-icon-left">🎊</span>
+                    <span class="btn-text">开始接福</span>
+                    <span class="btn-icon-right">🎊</span>
+                </div>
+                <div class="btn-layer btn-layer-1"></div>
+                <div class="btn-layer btn-layer-2"></div>
+                <div class="btn-shine-3d"></div>
+            </button>
+
+            <!-- 音效开关 -->
+            <div class="sound-toggle">
+                <button id="sound-btn" class="sound-btn active">
+                    <span class="sound-on">🔊</span>
+                    <span class="sound-off">🔇</span>
+                    <span class="sound-label">音效</span>
+                </button>
+            </div>
+
+            <!-- 操作提示 -->
+            <div class="control-hints-3d">
+                <div class="hint-card">
+                    <span class="hint-icon">⌨️</span>
+                    <span>← → 或 A D</span>
+                </div>
+                <div class="hint-divider">|</div>
+                <div class="hint-card">
+                    <span class="hint-icon">📱</span>
+                    <span>点击屏幕两侧</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部波浪3D -->
+        <div class="wave-3d-container">
+            <div class="wave-3d wave-1"></div>
+            <div class="wave-3d wave-2"></div>
+            <div class="wave-3d wave-3"></div>
+        </div>
+
+        <!-- 学院底部标识 -->
+        <div class="footer-college">
+            <div class="footer-line"></div>
+            <span>数智年味 · 创意接福</span>
+            <div class="footer-line"></div>
+        </div>
+    </div>
+
+    <!-- 游戏页面 -->
+    <div id="game-screen" class="screen">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- 3D游戏HUD -->
+        <div class="game-hud-3d">
+            <div class="hud-left-3d">
+                <div class="score-panel-3d">
+                    <div class="panel-bg"></div>
+                    <div class="score-content">
+                        <div class="score-icon">💰</div>
+                        <div class="score-info">
+                            <div class="score-label">分数</div>
+                            <div id="score" class="score-value-3d">0</div>
+                        </div>
+                    </div>
+                    <div class="panel-glow"></div>
+                </div>
+                <div id="combo-display-3d" class="combo-display-3d hidden">
+                    <div class="combo-fire">🔥</div>
+                    <div class="combo-text">
+                        <span id="combo-count" class="combo-count">x2</span>
+                        <span class="combo-label">连击</span>
+                    </div>
+                    <div class="combo-glow"></div>
+                </div>
+            </div>
+
+            <div class="hud-center-3d">
+                <div class="level-badge-3d" id="level-indicator">
+                    <div class="level-inner">
+                        <span class="level-prefix">第</span>
+                        <span id="current-level" class="level-num">1</span>
+                        <span class="level-suffix">波</span>
+                    </div>
+                    <div class="level-glow"></div>
+                </div>
+            </div>
+
+            <div class="hud-right-3d">
+                <div class="time-panel-3d">
+                    <div class="time-ring-3d">
+                        <svg viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="timeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#FFD700"/>
+                                    <stop offset="100%" style="stop-color:#FF6B00"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="time-bg" cx="50" cy="50" r="42"/>
+                            <circle id="time-progress" class="time-fill" cx="50" cy="50" r="42"/>
+                        </svg>
+                        <div class="time-inner">
+                            <span id="time" class="time-value-3d">60</span>
+                            <span class="time-unit">秒</span>
+                        </div>
+                        <div class="time-glow"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技能栏3D -->
+        <div class="skill-bar-3d">
+            <button id="skill-magnet" class="skill-btn-3d" data-skill="magnet" disabled>
+                <div class="skill-icon-3d">🧲</div>
+                <div class="skill-name">吸金术</div>
+                <div class="skill-key">Q</div>
+                <div class="skill-charge-ring">
+                    <svg viewBox="0 0 60 60">
+                        <circle class="charge-bg" cx="30" cy="30" r="26"/>
+                        <circle id="magnet-charge" class="charge-fill" cx="30" cy="30" r="26"/>
+                    </svg>
+                </div>
+                <div class="skill-glow"></div>
+            </button>
+            <button id="skill-slow" class="skill-btn-3d" data-skill="slow" disabled>
+                <div class="skill-icon-3d">⏰</div>
+                <div class="skill-name">缓时术</div>
+                <div class="skill-key">E</div>
+                <div class="skill-charge-ring">
+                    <svg viewBox="0 0 60 60">
+                        <circle class="charge-bg" cx="30" cy="30" r="26"/>
+                        <circle id="slow-charge" class="charge-fill" cx="30" cy="30" r="26"/>
+                    </svg>
+                </div>
+                <div class="skill-glow"></div>
+            </button>
+            <button id="skill-fever" class="skill-btn-3d" data-skill="fever" disabled>
+                <div class="skill-icon-3d">🌟</div>
+                <div class="skill-name">福运爆发</div>
+                <div class="skill-key">R</div>
+                <div class="skill-charge-ring">
+                    <svg viewBox="0 0 60 60">
+                        <circle class="charge-bg" cx="30" cy="30" r="26"/>
+                        <circle id="fever-charge" class="charge-fill" cx="30" cy="30" r="26"/>
+                    </svg>
+                </div>
+                <div class="skill-glow"></div>
+            </button>
+        </div>
+
+        <!-- Buff状态栏 -->
+        <div id="status-bar" class="status-bar-3d">
+            <div id="buff-invincible" class="buff-item-3d hidden">
+                <span class="buff-icon">🛡️</span>
+                <span class="buff-text">无敌</span>
+                <div class="buff-timer-bar"><div class="buff-timer-fill"></div></div>
+            </div>
+            <div id="buff-double" class="buff-item-3d hidden">
+                <span class="buff-icon">⭐</span>
+                <span class="buff-text">双倍</span>
+                <div class="buff-timer-bar"><div class="buff-timer-fill"></div></div>
+            </div>
+            <div id="buff-magnet" class="buff-item-3d hidden">
+                <span class="buff-icon">🧲</span>
+                <span class="buff-text">吸金</span>
+                <div class="buff-timer-bar"><div class="buff-timer-fill"></div></div>
+            </div>
+            <div id="buff-slow" class="buff-item-3d hidden">
+                <span class="buff-icon">⏰</span>
+                <span class="buff-text">缓时</span>
+                <div class="buff-timer-bar"><div class="buff-timer-fill"></div></div>
+            </div>
+            <div id="buff-fever" class="buff-item-3d hidden">
+                <span class="buff-icon">🌟</span>
+                <span class="buff-text">爆发</span>
+                <div class="buff-timer-bar"><div class="buff-timer-fill"></div></div>
+            </div>
+        </div>
+
+        <!-- 触控区域 -->
+        <div class="touch-zone left" id="touch-left">
+            <div class="touch-indicator">◀</div>
+        </div>
+        <div class="touch-zone right" id="touch-right">
+            <div class="touch-indicator">▶</div>
+        </div>
+
+        <!-- 特效容器 -->
+        <div id="popup-container" class="popup-container-3d"></div>
+        <div id="particle-container"></div>
+
+        <!-- 成就提示 -->
+        <div id="achievement-toast" class="achievement-toast-3d hidden">
+            <div class="achievement-content">
+                <span class="achievement-icon">🏆</span>
+                <div class="achievement-info">
+                    <span class="achievement-title">成就解锁</span>
+                    <span class="achievement-name"></span>
+                </div>
+            </div>
+            <div class="achievement-glow"></div>
+        </div>
+
+        <!-- 特殊事件提示 -->
+        <div id="event-banner" class="event-banner hidden">
+            <div class="event-content">
+                <span class="event-icon">🎉</span>
+                <span class="event-text"></span>
+                <span class="event-icon">🎉</span>
+            </div>
+        </div>
+
+        <!-- 暂停按钮 -->
+        <button id="pause-btn" class="pause-btn-3d">
+            <span class="pause-icon">⏸️</span>
+        </button>
+
+        <!-- 暂停菜单 -->
+        <div id="pause-menu" class="pause-menu-3d hidden">
+            <div class="pause-card-3d">
+                <div class="pause-header">
+                    <span class="pause-icon-large">⏸️</span>
+                    <h2>游戏暂停</h2>
+                </div>
+                <div class="pause-stats">
+                    <div class="stat-mini">当前分数: <span id="pause-score">0</span></div>
+                    <div class="stat-mini">当前波数: <span id="pause-level">1</span></div>
+                </div>
+                <div class="pause-buttons">
+                    <button id="resume-btn" class="menu-btn-3d primary">
+                        <span>▶️</span> 继续游戏
+                    </button>
+                    <button id="quit-btn" class="menu-btn-3d secondary">
+                        <span>🏠</span> 返回首页
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结束页面 - 全新设计 -->
+    <div id="end-screen" class="screen">
+        <canvas id="firework-canvas"></canvas>
+        <div class="celebration-overlay"></div>
+
+        <div class="end-page-container">
+            <!-- 🏆 第一区块：核心成绩展示 -->
+            <section class="hero-section">
+                <div class="hero-title">
+                    <span class="title-deco">🐍</span>
+                    <h1>游戏结束</h1>
+                    <span class="title-deco">🐍</span>
+                </div>
+
+                <!-- 分数核心展示 -->
+                <div class="score-hero">
+                    <div class="score-glow-bg"></div>
+                    <div class="score-content">
+                        <span class="score-label-mini">最终得分</span>
+                        <div class="score-number-wrap">
+                            <span id="final-score" class="score-number">0</span>
+                        </div>
+                        <div class="rank-badge" id="score-rank">D</div>
+                    </div>
+                    <div id="new-record" class="new-record-badge hidden">
+                        <span>🎉</span> 新纪录！ <span>🎉</span>
+                    </div>
+                </div>
+
+                <!-- 统计条 - 紧凑单行 -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-icon">🧧</span>
+                        <span id="stat-items" class="stat-num">0</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-icon">🔥</span>
+                        <span id="stat-combo" class="stat-num">0</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-icon">🀄</span>
+                        <span id="stat-fu" class="stat-num">0</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-icon">⚡</span>
+                        <span>Lv.<span id="stat-level">1</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 📜 第二区块：祝福语 -->
+            <section class="blessing-section">
+                <div class="blessing-card-new">
+                    <div class="blessing-corner tl">福</div>
+                    <div class="blessing-corner tr">禄</div>
+                    <div class="blessing-main">
+                        <p id="blessing-text" class="blessing-text-new"></p>
+                    </div>
+                    <div class="blessing-corner bl">寿</div>
+                    <div class="blessing-corner br">喜</div>
+                </div>
+            </section>
+
+            <!-- 🎁 第三区块：盲盒惊喜 -->
+            <section class="lucky-section">
+                <div class="section-header">
+                    <div class="header-line"></div>
+                    <span class="header-title">🎁 福运盲盒 🎁</span>
+                    <div class="header-line"></div>
+                </div>
+
+                <div id="lucky-box-container" class="lucky-box-wrapper">
+                    <!-- 盲盒 -->
+                    <div id="lucky-box" class="lucky-box-new">
+                        <div class="box-shine"></div>
+                        <div class="box-lid-new">
+                            <span class="lid-text">福</span>
+                        </div>
+                        <div class="box-body-new">
+                            <div class="box-face front"></div>
+                            <div class="box-face back"></div>
+                            <div class="box-face left"></div>
+                            <div class="box-face right"></div>
+                        </div>
+                        <div class="box-shadow"></div>
+                    </div>
+                    <!-- 盲盒奖励 -->
+                    <div id="box-reward" class="reward-display hidden">
+                        <div class="reward-burst"></div>
+                        <div class="reward-icon-wrapper">
+                            <img id="reward-icon-img" class="reward-img" src="" alt="" style="display:none;">
+                            <span id="reward-icon-emoji" class="reward-emoji">🧧</span>
+                        </div>
+                        <h3 id="reward-title" class="reward-name">新年红包</h3>
+                        <p id="reward-desc" class="reward-detail">恭喜获得 888 元虚拟红包！</p>
+                        <div id="reward-blessing" class="reward-wish">愿您蛇年财运亨通！</div>
+                    </div>
+                </div>
+
+                <div class="box-level-tag">
+                    <span id="box-level-text">点击盲盒开启惊喜</span>
+                </div>
+            </section>
+
+            <!-- 📱 第四区块：社交与排行 -->
+            <section class="social-section-new">
+                <!-- 分享按钮组 -->
+                <div class="share-row">
+                    <button id="share-poster-btn" class="share-btn">
+                        <span class="btn-emoji">🖼️</span>
+                        <span>海报</span>
+                    </button>
+                    <button id="share-wechat-btn" class="share-btn">
+                        <span class="btn-emoji">💬</span>
+                        <span>分享</span>
+                    </button>
+                    <button id="copy-link-btn" class="share-btn">
+                        <span class="btn-emoji">🔗</span>
+                        <span>链接</span>
+                    </button>
+                </div>
+
+                <!-- 🏆 福运排行榜（前10名） -->
+                <div class="leaderboard-section">
+                    <div class="leaderboard-header">
+                        <span class="lb-title">🏆 福运排行榜</span>
+                        <span class="lb-subtitle">历史前10名</span>
+                    </div>
+                    <div id="leaderboard-list" class="leaderboard-list-full">
+                        <!-- JS动态渲染 -->
+                    </div>
+                    <div class="leaderboard-footer">
+                        <span id="current-rank-info">本次排名: --</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 🎮 第五区块：操作按钮 -->
+            <section class="action-section">
+                <button id="restart-btn" class="action-btn primary">
+                    <span>🔄</span>
+                    <span>再来一局</span>
+                </button>
+                <button id="home-btn" class="action-btn secondary">
+                    <span>🏠</span>
+                    <span>返回首页</span>
+                </button>
+            </section>
+
+            <!-- 🎓 底部学院标识 -->
+            <footer class="college-footer">
+                <div class="college-badge">🎓</div>
+                <p class="college-name">湖南信息学院 · 计算机科学与工程学院</p>
+                <p class="college-slogan">数智启新岁 · 创意绘年味</p>
+            </footer>
+        </div>
+    </div>
+
+    <script src="js/game.js"></script>
+</body>
+</html>
