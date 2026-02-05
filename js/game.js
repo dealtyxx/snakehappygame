@@ -2256,8 +2256,37 @@ function showScreen(screenId) {
     document.getElementById(screenId)?.classList.add('active');
 }
 
+// ==================== 全屏控制 ====================
+function requestFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+    } else if (elem.webkitRequestFullscreen) { // Safari/iOS
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { // IE/Edge
+        elem.msRequestFullscreen();
+    }
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
+}
+
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+}
+
 // ==================== 游戏控制 ====================
 function startGame() {
+    // 📱 请求全屏模式
+    requestFullscreen();
+
     // 初始化音频（需要用户交互）
     if (!AudioSystem.context) {
         AudioSystem.init();

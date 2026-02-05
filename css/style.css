@@ -57,6 +57,37 @@ body {
     background: var(--gradient-festive);
 }
 
+/* ==================== 全屏模式优化 ==================== */
+:fullscreen {
+    background: var(--gradient-festive);
+}
+
+::backdrop {
+    background: var(--gradient-festive);
+}
+
+/* iOS Safari全屏优化 */
+@supports (-webkit-touch-callout: none) {
+    html, body {
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* 全屏提示文字 */
+.fullscreen-hint {
+    font-size: 0.75rem;
+    color: rgba(255, 215, 0, 0.7);
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.fullscreen-hint::before {
+    content: '📱';
+}
+
 /* ==================== 全局效果 ==================== */
 .screen {
     position: fixed;
