@@ -1312,8 +1312,9 @@ body {
     transform: translateX(-50%);
     display: flex;
     gap: 20px;
-    z-index: 100;
+    z-index: 200; /* 比触摸区域更高 */
     perspective: 500px;
+    pointer-events: auto; /* 确保可点击 */
 }
 
 .skill-btn-3d {
@@ -1330,6 +1331,9 @@ body {
     cursor: pointer;
     transition: all var(--transition-fast);
     transform: perspective(200px) rotateX(10deg);
+    pointer-events: auto; /* 📱 确保移动端可点击 */
+    -webkit-tap-highlight-color: rgba(255, 215, 0, 0.3);
+    touch-action: manipulation;
 }
 
 .skill-btn-3d:not(:disabled):hover {
@@ -1497,7 +1501,7 @@ body {
 .touch-zone {
     position: fixed;
     top: 0;
-    bottom: 0;
+    bottom: 150px; /* 底部留出空间给技能栏 */
     width: 50%;
     z-index: 50;
     /* 防止触摸时选中文字 */
@@ -1509,18 +1513,22 @@ body {
 .touch-zone.left { left: 0; }
 .touch-zone.right { right: 0; }
 
-/* 📱 移动端触摸区域适配画布宽度 */
+/* 📱 移动端触摸区域适配 */
 @media (max-width: 768px) {
     .touch-zone {
-        width: calc(50% - max(0px, (100vw - 420px) / 2));
+        bottom: 130px; /* 移动端底部留更多空间 */
     }
+}
 
-    .touch-zone.left {
-        left: max(0px, calc((100vw - 420px) / 2));
+@media (max-width: 480px) {
+    .touch-zone {
+        bottom: 120px;
     }
+}
 
-    .touch-zone.right {
-        right: max(0px, calc((100vw - 420px) / 2));
+@media (max-width: 360px) {
+    .touch-zone {
+        bottom: 100px;
     }
 }
 
