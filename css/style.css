@@ -1817,6 +1817,13 @@ body {
 /* ==================== 结束页面3D ==================== */
 #end-screen {
     background: var(--gradient-festive);
+    /* 📱 允许页面滚动 - 覆盖.screen的居中布局 */
+    display: block !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
 }
 
 .celebration-overlay {
