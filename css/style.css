@@ -1645,7 +1645,7 @@ body {
 /* 桌面端隐藏触摸区域 */
 @media (hover: hover) and (pointer: fine) {
     .touch-zone { display: none; }
-    .skill-bar-3d { bottom: 30px; }
+    .skill-bar-3d { bottom: 80px; }
 }
 
 /* 移动端额外优化 */
