@@ -988,6 +988,27 @@ body {
 /* ==================== 游戏页面3D ==================== */
 #game-screen {
     background: var(--gradient-night);
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-canvas {
+    display: block;
+    max-width: 100%;
+}
+
+/* 📱 移动端游戏画布适配 */
+@media (max-width: 768px) {
+    #game-screen {
+        background: var(--gradient-night);
+    }
+
+    #game-canvas {
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    }
 }
 
 /* 3D HUD */
@@ -1003,6 +1024,17 @@ body {
     z-index: 100;
     background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
     pointer-events: none;
+}
+
+/* 📱 移动端HUD适配画布宽度 */
+@media (max-width: 768px) {
+    .game-hud-3d {
+        left: max(0px, calc((100vw - 420px) / 2));
+        right: max(0px, calc((100vw - 420px) / 2));
+        max-width: 420px;
+        margin: 0 auto;
+        padding: 10px 15px;
+    }
 }
 
 .hud-left-3d, .hud-right-3d {
@@ -1476,6 +1508,21 @@ body {
 
 .touch-zone.left { left: 0; }
 .touch-zone.right { right: 0; }
+
+/* 📱 移动端触摸区域适配画布宽度 */
+@media (max-width: 768px) {
+    .touch-zone {
+        width: calc(50% - max(0px, (100vw - 420px) / 2));
+    }
+
+    .touch-zone.left {
+        left: max(0px, calc((100vw - 420px) / 2));
+    }
+
+    .touch-zone.right {
+        right: max(0px, calc((100vw - 420px) / 2));
+    }
+}
 
 .touch-indicator {
     position: absolute;

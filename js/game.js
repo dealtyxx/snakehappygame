@@ -1169,13 +1169,14 @@ class Vector2 {
 class Player {
     constructor(canvas) {
         this.canvas = canvas;
-        // 📱 根据屏幕大小调整玩家尺寸
+        // 📱 根据屏幕大小调整玩家尺寸 - 移动端更小
         const isMobile = window.innerWidth <= 768;
-        const isSmallMobile = window.innerWidth <= 420;
-        this.width = isSmallMobile ? 55 : (isMobile ? 60 : 70);
-        this.height = isSmallMobile ? 55 : (isMobile ? 60 : 70);
+        const isSmallMobile = window.innerWidth <= 480;
+        const isTinyMobile = window.innerWidth <= 360;
+        this.width = isTinyMobile ? 40 : (isSmallMobile ? 45 : (isMobile ? 50 : 70));
+        this.height = isTinyMobile ? 40 : (isSmallMobile ? 45 : (isMobile ? 50 : 70));
         // 📱 移动端底部留出更多空间给触摸按钮
-        const bottomOffset = isSmallMobile ? 80 : (isMobile ? 100 : 20);
+        const bottomOffset = isTinyMobile ? 60 : (isSmallMobile ? 70 : (isMobile ? 80 : 20));
         this.x = canvas.width / 2 - this.width / 2;
         this.y = canvas.height - this.height - bottomOffset;
         this.bottomOffset = bottomOffset;
@@ -1314,11 +1315,12 @@ class Item {
         // 🖼️ 获取物品图片
         this.image = ImageLoader.getItemImage(type);
 
-        // 📱 根据屏幕大小调整物品尺寸
+        // 📱 根据屏幕大小调整物品尺寸 - 移动端更小
         const isMobile = window.innerWidth <= 768;
-        const isSmallMobile = window.innerWidth <= 420;
-        this.width = isSmallMobile ? 40 : (isMobile ? 45 : 50);
-        this.height = isSmallMobile ? 40 : (isMobile ? 45 : 50);
+        const isSmallMobile = window.innerWidth <= 480;
+        const isTinyMobile = window.innerWidth <= 360;
+        this.width = isTinyMobile ? 30 : (isSmallMobile ? 35 : (isMobile ? 38 : 50));
+        this.height = isTinyMobile ? 30 : (isSmallMobile ? 35 : (isMobile ? 38 : 50));
         this.x = Math.random() * (canvas.width - this.width);
         this.y = -this.height;
 
@@ -2478,8 +2480,19 @@ function clearAllTimers() {
 function resizeGameCanvas() {
     if (!DOM.gameCanvas) return;
 
-    DOM.gameCanvas.width = window.innerWidth;
+    // 📱 移动端限制画布宽度，与开始/结束页面一致
+    const isMobile = window.innerWidth <= 768;
+    const maxWidth = isMobile ? Math.min(window.innerWidth, 420) : window.innerWidth;
+
+    DOM.gameCanvas.width = maxWidth;
     DOM.gameCanvas.height = window.innerHeight;
+
+    // 📱 移动端画布居中
+    if (isMobile && window.innerWidth > maxWidth) {
+        DOM.gameCanvas.style.marginLeft = ((window.innerWidth - maxWidth) / 2) + 'px';
+    } else {
+        DOM.gameCanvas.style.marginLeft = '0';
+    }
 
     if (player) {
         player.canvas = DOM.gameCanvas;
