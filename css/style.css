@@ -288,8 +288,12 @@ body {
 /* ==================== 开始页面3D ==================== */
 #start-screen {
     background: var(--gradient-festive);
-    /* 📱 移动端允许滚动 */
-    display: block !important;
+    /* 📱 移动端允许滚动，同时居中显示 */
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
     overflow-y: auto !important;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
@@ -374,7 +378,7 @@ body {
     position: relative;
     z-index: 10;
     text-align: center;
-    padding: 50px 20px 40px 20px;
+    padding: 20px;
     max-width: 450px;
     width: 95%;
     margin: 0 auto;
