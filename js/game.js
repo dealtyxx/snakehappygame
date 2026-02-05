@@ -1145,6 +1145,55 @@ const input = {
     touchStartX: 0
 };
 
+function getViewportDimensions() {
+    const viewport = window.visualViewport;
+    const width = Math.max(
+        320,
+        Math.round(viewport?.width || window.innerWidth || document.documentElement.clientWidth || 320)
+    );
+    const height = Math.max(
+        480,
+        Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight || 480)
+    );
+
+    return { width, height };
+}
+
+function getResponsiveFlags() {
+    const { width } = getViewportDimensions();
+    return {
+        isMobile: width <= 768,
+        isSmallMobile: width <= 480,
+        isTinyMobile: width <= 360
+    };
+}
+
+function drawImageContain(ctx, image, centerX, centerY, maxWidth, maxHeight, inset = 0) {
+    if (!image) return;
+
+    const safeWidth = Math.max(1, maxWidth - inset * 2);
+    const safeHeight = Math.max(1, maxHeight - inset * 2);
+    const imageRatio = image.width / image.height || 1;
+    const boxRatio = safeWidth / safeHeight;
+
+    let drawWidth = safeWidth;
+    let drawHeight = safeHeight;
+
+    if (imageRatio > boxRatio) {
+        drawHeight = safeWidth / imageRatio;
+    } else {
+        drawWidth = safeHeight * imageRatio;
+    }
+
+    ctx.drawImage(
+        image,
+        centerX - drawWidth / 2,
+        centerY - drawHeight / 2,
+        drawWidth,
+        drawHeight
+    );
+}
+
 // ==================== 工具类 ====================
 class Vector2 {
     constructor(x = 0, y = 0) {
@@ -1169,19 +1218,15 @@ class Vector2 {
 class Player {
     constructor(canvas) {
         this.canvas = canvas;
-        // 📱 根据屏幕大小调整玩家尺寸 - 移动端更小
-        const isMobile = window.innerWidth <= 768;
-        const isSmallMobile = window.innerWidth <= 480;
-        const isTinyMobile = window.innerWidth <= 360;
-        this.width = isTinyMobile ? 40 : (isSmallMobile ? 45 : (isMobile ? 50 : 70));
-        this.height = isTinyMobile ? 40 : (isSmallMobile ? 45 : (isMobile ? 50 : 70));
-        // 📱 移动端底部留出更多空间给触摸按钮
-        const bottomOffset = isTinyMobile ? 60 : (isSmallMobile ? 70 : (isMobile ? 80 : 20));
-        this.x = canvas.width / 2 - this.width / 2;
-        this.y = canvas.height - this.height - bottomOffset;
-        this.bottomOffset = bottomOffset;
+        this.width = 70;
+        this.height = 70;
+        this.x = 0;
+        this.y = 0;
+        this.bottomOffset = 20;
+        this.edgePadding = 0;
         this.speed = CONFIG.PLAYER_SPEED;
-        this.targetX = this.x;
+        this.targetX = 0;
+        this.updateResponsiveMetrics(true);
 
         // 🐍 随机选择小蛇图标
         this.image = ImageLoader.getRandomPlayerIcon();
@@ -1193,13 +1238,35 @@ class Player {
         this.feverGlow = 0;
     }
 
+    updateResponsiveMetrics(centerOnScreen = false) {
+        const { isMobile, isSmallMobile, isTinyMobile } = getResponsiveFlags();
+        const previousCenter = centerOnScreen
+            ? this.canvas.width / 2
+            : (this.x + this.width / 2);
+
+        this.width = isTinyMobile ? 40 : (isSmallMobile ? 45 : (isMobile ? 50 : 70));
+        this.height = this.width;
+        this.bottomOffset = isTinyMobile ? 62 : (isSmallMobile ? 72 : (isMobile ? 84 : 24));
+        this.edgePadding = isTinyMobile ? 2 : (isSmallMobile ? 3 : (isMobile ? 4 : 0));
+        this.speed = isMobile ? 9 : CONFIG.PLAYER_SPEED;
+
+        const minX = this.edgePadding;
+        const maxX = Math.max(minX, this.canvas.width - this.width - this.edgePadding);
+        this.x = Math.max(minX, Math.min(maxX, previousCenter - this.width / 2));
+        this.targetX = this.x;
+        this.y = this.canvas.height - this.height - this.bottomOffset;
+    }
+
     update(deltaTime) {
         // 平滑移动
         const diff = this.targetX - this.x;
         this.x += diff * 0.2;
 
         // 边界限制
-        this.x = Math.max(0, Math.min(this.canvas.width - this.width, this.x));
+        const minX = this.edgePadding;
+        const maxX = Math.max(minX, this.canvas.width - this.width - this.edgePadding);
+        this.x = Math.max(minX, Math.min(maxX, this.x));
+        this.targetX = Math.max(minX, Math.min(maxX, this.targetX));
 
         // 上下浮动动画
         this.bobOffset = Math.sin(Date.now() * this.bobSpeed * 0.01) * 5;
@@ -1223,11 +1290,12 @@ class Player {
     }
 
     moveLeft() {
-        this.targetX = Math.max(0, this.targetX - this.speed);
+        this.targetX = Math.max(this.edgePadding, this.targetX - this.speed);
     }
 
     moveRight() {
-        this.targetX = Math.min(this.canvas.width - this.width, this.targetX + this.speed);
+        const maxX = Math.max(this.edgePadding, this.canvas.width - this.width - this.edgePadding);
+        this.targetX = Math.min(maxX, this.targetX + this.speed);
     }
 
     draw(ctx) {
@@ -1267,13 +1335,7 @@ class Player {
 
         // 绘制蛇（优先使用图片，fallback到emoji）
         if (this.image) {
-            ctx.drawImage(
-                this.image,
-                drawX - this.width / 2,
-                drawY - this.height / 2,
-                this.width,
-                this.height
-            );
+            drawImageContain(ctx, this.image, drawX, drawY, this.width, this.height, 2);
         } else {
             // 图片未加载时使用emoji
             ctx.font = `${this.width}px Arial`;
@@ -1316,12 +1378,12 @@ class Item {
         this.image = ImageLoader.getItemImage(type);
 
         // 📱 根据屏幕大小调整物品尺寸 - 移动端更小
-        const isMobile = window.innerWidth <= 768;
-        const isSmallMobile = window.innerWidth <= 480;
-        const isTinyMobile = window.innerWidth <= 360;
+        const { isMobile, isSmallMobile, isTinyMobile } = getResponsiveFlags();
         this.width = isTinyMobile ? 30 : (isSmallMobile ? 35 : (isMobile ? 38 : 50));
-        this.height = isTinyMobile ? 30 : (isSmallMobile ? 35 : (isMobile ? 38 : 50));
-        this.x = Math.random() * (canvas.width - this.width);
+        this.height = this.width;
+        this.spawnPadding = isTinyMobile ? 2 : (isSmallMobile ? 3 : (isMobile ? 4 : 8));
+        const spawnRange = Math.max(1, canvas.width - this.width - this.spawnPadding * 2);
+        this.x = this.spawnPadding + Math.random() * spawnRange;
         this.y = -this.height;
 
         // 速度
@@ -1330,9 +1392,9 @@ class Item {
 
         // 动画
         this.rotation = 0;
-        this.rotationSpeed = (Math.random() - 0.5) * 0.08;
+        this.rotationSpeed = (Math.random() - 0.5) * (isMobile ? 0.04 : 0.08);
         this.wobble = Math.random() * Math.PI * 2;
-        this.wobbleSpeed = 0.03 + Math.random() * 0.02;
+        this.wobbleSpeed = (0.03 + Math.random() * 0.02) * (isMobile ? 0.75 : 1);
         this.scale = 1;
 
         // 拖尾
@@ -1372,6 +1434,10 @@ class Item {
         // 左右摆动
         this.wobble += this.wobbleSpeed;
         this.x += Math.sin(this.wobble) * 0.5;
+
+        const minX = this.spawnPadding;
+        const maxX = Math.max(minX, this.canvas.width - this.width - this.spawnPadding);
+        this.x = Math.max(minX, Math.min(maxX, this.x));
 
         // 旋转
         this.rotation += this.rotationSpeed;
@@ -1439,13 +1505,7 @@ class Item {
 
         // 🖼️ 优先使用图片绘制，fallback到emoji
         if (this.image) {
-            ctx.drawImage(
-                this.image,
-                -this.width / 2,
-                -this.height / 2,
-                this.width,
-                this.height
-            );
+            drawImageContain(ctx, this.image, 0, 0, this.width, this.height, 1.5);
         } else {
             ctx.font = `${this.width}px Arial`;
             ctx.textAlign = 'center';
@@ -2106,8 +2166,9 @@ function initBgCanvas() {
     const canvas = document.getElementById('bg-canvas-3d');
     if (!canvas) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const viewport = getViewportDimensions();
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
 
     const ctx = canvas.getContext('2d');
 
@@ -2152,8 +2213,9 @@ function initFireworkCanvas() {
     const canvas = DOM.fireworkCanvas;
     if (!canvas) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const viewport = getViewportDimensions();
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
 
     const ctx = canvas.getContext('2d');
 
@@ -2481,25 +2543,67 @@ function resizeGameCanvas() {
     if (!DOM.gameCanvas) return;
 
     // 📱 移动端限制画布宽度，与开始/结束页面一致
-    const isMobile = window.innerWidth <= 768;
-    const maxWidth = isMobile ? Math.min(window.innerWidth, 420) : window.innerWidth;
+    const viewport = getViewportDimensions();
+    const isMobile = viewport.width <= 768;
+    const maxWidth = isMobile ? Math.min(viewport.width, 420) : viewport.width;
 
     DOM.gameCanvas.width = maxWidth;
-    DOM.gameCanvas.height = window.innerHeight;
+    DOM.gameCanvas.height = viewport.height;
+    DOM.gameCanvas.style.width = `${maxWidth}px`;
+    DOM.gameCanvas.style.height = `${viewport.height}px`;
 
     // 📱 移动端画布居中
-    if (isMobile && window.innerWidth > maxWidth) {
-        DOM.gameCanvas.style.marginLeft = ((window.innerWidth - maxWidth) / 2) + 'px';
+    if (isMobile && viewport.width > maxWidth) {
+        DOM.gameCanvas.style.marginLeft = ((viewport.width - maxWidth) / 2) + 'px';
     } else {
         DOM.gameCanvas.style.marginLeft = '0';
     }
 
     if (player) {
         player.canvas = DOM.gameCanvas;
-        // 📱 使用玩家保存的底部偏移
-        player.y = DOM.gameCanvas.height - player.height - (player.bottomOffset || 20);
-        player.x = Math.min(player.x, DOM.gameCanvas.width - player.width);
-        player.targetX = player.x;
+        player.updateResponsiveMetrics();
+    }
+
+    items.forEach(item => {
+        item.canvas = DOM.gameCanvas;
+        const padding = item.spawnPadding || 0;
+        const minX = padding;
+        const maxX = Math.max(minX, DOM.gameCanvas.width - item.width - padding);
+        item.x = Math.max(minX, Math.min(maxX, item.x));
+    });
+}
+
+let viewportResizeRaf = null;
+
+function handleViewportResize() {
+    if (viewportResizeRaf) return;
+
+    viewportResizeRaf = requestAnimationFrame(() => {
+        viewportResizeRaf = null;
+
+        if (state.isRunning) {
+            resizeGameCanvas();
+        }
+
+        const viewport = getViewportDimensions();
+        const bgCanvas = document.getElementById('bg-canvas-3d');
+        if (bgCanvas) {
+            bgCanvas.width = viewport.width;
+            bgCanvas.height = viewport.height;
+        }
+
+        if (DOM.fireworkCanvas && DOM.endScreen?.classList.contains('active')) {
+            DOM.fireworkCanvas.width = viewport.width;
+            DOM.fireworkCanvas.height = viewport.height;
+        }
+    });
+}
+
+function bindViewportResizeEvents() {
+    window.addEventListener('resize', handleViewportResize);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+        window.visualViewport.addEventListener('scroll', handleViewportResize);
     }
 }
 
@@ -2585,20 +2689,21 @@ function bindEvents() {
     DOM.touchRight?.addEventListener('touchcancel', () => input.right = false);
 
     // 方式2：在游戏画布上滑动控制（手指跟随）
-    let touchStartX = 0;
     let isTouching = false;
 
     DOM.gameCanvas?.addEventListener('touchstart', (e) => {
         if (!state.isRunning || state.isPaused) return;
         e.preventDefault();
         isTouching = true;
-        touchStartX = e.touches[0].clientX;
+        input.touchStartX = e.touches[0].clientX;
 
         // 直接将玩家移动到触摸位置
         if (player) {
             const canvasRect = DOM.gameCanvas.getBoundingClientRect();
             const touchX = e.touches[0].clientX - canvasRect.left;
-            player.targetX = Math.max(0, Math.min(DOM.gameCanvas.width - player.width, touchX - player.width / 2));
+            const minX = player.edgePadding || 0;
+            const maxX = Math.max(minX, DOM.gameCanvas.width - player.width - minX);
+            player.targetX = Math.max(minX, Math.min(maxX, touchX - player.width / 2));
         }
     }, { passive: false });
 
@@ -2610,7 +2715,9 @@ function bindEvents() {
         if (player) {
             const canvasRect = DOM.gameCanvas.getBoundingClientRect();
             const touchX = e.touches[0].clientX - canvasRect.left;
-            player.targetX = Math.max(0, Math.min(DOM.gameCanvas.width - player.width, touchX - player.width / 2));
+            const minX = player.edgePadding || 0;
+            const maxX = Math.max(minX, DOM.gameCanvas.width - player.width - minX);
+            player.targetX = Math.max(minX, Math.min(maxX, touchX - player.width / 2));
         }
     }, { passive: false });
 
@@ -2631,17 +2738,7 @@ function bindEvents() {
     document.getElementById('skill-slow')?.addEventListener('click', () => useSkill('slow'));
     document.getElementById('skill-fever')?.addEventListener('click', () => useSkill('fever'));
 
-    // 窗口大小变化
-    window.addEventListener('resize', () => {
-        if (state.isRunning) {
-            resizeGameCanvas();
-        }
-        const bgCanvas = document.getElementById('bg-canvas-3d');
-        if (bgCanvas) {
-            bgCanvas.width = window.innerWidth;
-            bgCanvas.height = window.innerHeight;
-        }
-    });
+    bindViewportResizeEvents();
 
     // 🎁 盲盒点击事件
     const luckyBox = document.getElementById('lucky-box');

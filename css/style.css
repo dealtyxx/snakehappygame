@@ -737,6 +737,21 @@ body {
 .item-emoji {
     font-size: 1.4rem;
     margin-bottom: 6px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.12em;
+    line-height: 1.12;
+    min-height: calc(1em * 1.2);
+}
+
+.item-emoji span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    min-width: 1em;
 }
 
 .item-label {
@@ -991,6 +1006,8 @@ body {
     display: flex !important;
     justify-content: center;
     align-items: center;
+    /* 确保子元素（提示、特效等）不被裁剪 */
+    overflow: visible;
 }
 
 #game-canvas {
@@ -1002,6 +1019,7 @@ body {
 @media (max-width: 768px) {
     #game-screen {
         background: var(--gradient-night);
+        overflow: visible;
     }
 
     #game-canvas {
@@ -1790,17 +1808,26 @@ body {
     cursor: pointer;
     z-index: 100;
     transition: all var(--transition-fast);
-    transform: perspective(200px) rotateY(-10deg);
+    /* 移除 rotateY 避免图标被裁剪 */
+    transform: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
 }
 
 .pause-btn-3d:hover {
-    transform: perspective(200px) rotateY(0deg) scale(1.1);
+    transform: scale(1.1);
     background: rgba(255,255,255,0.2);
     border-color: var(--gold-primary);
 }
 
 .pause-icon {
     font-size: 1.5rem;
+    line-height: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* 暂停菜单3D */
@@ -4942,5 +4969,473 @@ body {
     .time-ring-3d,
     .skill-btn-3d {
         border-width: 1px;
+    }
+}
+
+/* ================================================================
+   2026-02 显示适配修复 - 图标完整显示 + 双端布局稳定
+================================================================ */
+:root {
+    --mobile-safe-width: 420px;
+    --icon-safe-line-height: 1.15;
+}
+
+:is(
+    .badge-icon,
+    .trophy,
+    .header-icon,
+    .item-emoji,
+    .fire-icon,
+    .btn-icon-left,
+    .btn-icon-right,
+    .sound-on,
+    .sound-off,
+    .hint-icon,
+    .score-icon,
+    .combo-fire,
+    .skill-icon-3d,
+    .buff-icon,
+    .achievement-icon,
+    .event-icon,
+    .pause-icon,
+    .pause-icon-large,
+    .stat-icon,
+    .reward-emoji,
+    .share-btn .btn-emoji,
+    .touch-indicator,
+    .title-deco,
+    .record-icon
+) {
+    line-height: var(--icon-safe-line-height);
+    transform-origin: center center;
+}
+
+.skill-btn-3d,
+.score-panel-3d,
+.time-ring-3d,
+.reward-icon-wrapper,
+.stat-item,
+.share-btn {
+    overflow: visible;
+}
+
+.reward-icon-wrapper {
+    isolation: isolate;
+}
+
+.reward-img,
+.reward-emoji {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.achievement-content,
+.event-content {
+    max-width: min(92vw, 420px);
+}
+
+@media (max-width: 768px) {
+    .content-3d,
+    .end-page-container {
+        width: min(100%, var(--mobile-safe-width));
+        margin-inline: auto;
+    }
+
+    .game-hud-3d {
+        width: min(100vw, var(--mobile-safe-width));
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+    }
+
+    .skill-bar-3d {
+        width: min(100vw, var(--mobile-safe-width));
+        left: 50%;
+        transform: translateX(-50%);
+        justify-content: center;
+        gap: 10px;
+        padding: 0 10px max(8px, env(safe-area-inset-bottom));
+        box-sizing: border-box;
+    }
+
+    .status-bar-3d {
+        width: min(calc(100vw - 14px), var(--mobile-safe-width));
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .touch-zone {
+        width: min(50vw, calc(var(--mobile-safe-width) / 2));
+    }
+
+    .touch-zone.left {
+        left: max(0px, calc((100vw - var(--mobile-safe-width)) / 2));
+    }
+
+    .touch-zone.right {
+        right: max(0px, calc((100vw - var(--mobile-safe-width)) / 2));
+    }
+
+    .item-3d {
+        min-height: 64px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .share-row {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .share-btn {
+        min-width: 76px;
+        min-height: 66px;
+    }
+
+    .reward-icon-wrapper {
+        width: 88px;
+        height: 88px;
+    }
+}
+
+@media (max-width: 480px) {
+    .item-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px;
+    }
+
+    .stats-bar {
+        flex-wrap: wrap;
+        gap: 6px 10px;
+        justify-content: center;
+    }
+
+    .stat-divider {
+        display: none;
+    }
+
+    .stat-item {
+        min-width: calc(50% - 10px);
+        justify-content: center;
+    }
+
+    .share-btn {
+        flex: 1 1 calc(33.333% - 8px);
+        min-width: 84px;
+    }
+
+    .pause-btn-3d {
+        right: max(8px, calc((100vw - min(100vw, var(--mobile-safe-width))) / 2 + 8px));
+        top: max(8px, env(safe-area-inset-top));
+    }
+}
+
+@media (max-width: 360px) {
+    .item-3d {
+        min-height: 58px;
+        padding: 8px 6px;
+    }
+
+    .item-emoji {
+        font-size: 1rem !important;
+    }
+
+    .skill-btn-3d {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* ================================================================
+   2026-02-05 修复 - 手机端提示/按钮显示
+================================================================ */
+
+/* 修复移动端提示信息和特效显示 */
+@media (max-width: 768px) {
+    /* 移除所有 3D 变换，确保图标完整显示 */
+    .skill-btn-3d {
+        transform: none !important;
+    }
+
+    .skill-btn-3d:not(:disabled):hover,
+    .skill-btn-3d:not(:disabled):active {
+        transform: scale(1.05) !important;
+    }
+
+    .skill-btn-3d.ready {
+        transform: none !important;
+        animation: skillReadyMobile 1s ease-in-out infinite;
+    }
+
+    @keyframes skillReadyMobile {
+        0%, 100% { box-shadow: 0 0 15px rgba(76, 175, 80, 0.6); }
+        50% { box-shadow: 0 0 25px rgba(76, 175, 80, 0.8); }
+    }
+
+    .score-panel-3d,
+    .time-ring-3d {
+        transform: none !important;
+    }
+
+    /* 确保所有图标容器 overflow 可见 */
+    .skill-btn-3d,
+    .pause-btn-3d,
+    .buff-item-3d,
+    .score-panel-3d,
+    .time-ring-3d,
+    .combo-display-3d,
+    .level-badge-3d {
+        overflow: visible;
+    }
+
+    /* 确保图标本身正确显示 */
+    .skill-icon-3d,
+    .score-icon,
+    .buff-icon,
+    .pause-icon,
+    .combo-fire,
+    .time-value-3d {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        line-height: 1.15;
+    }
+
+    /* 确保得分飘字容器覆盖全屏 */
+    .popup-container-3d {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 200;
+        overflow: visible;
+    }
+
+    /* 确保成就提示在移动端正确显示 */
+    .achievement-toast-3d {
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        max-width: 90vw;
+        z-index: 300;
+    }
+
+    .achievement-content {
+        padding: 12px 20px;
+        gap: 10px;
+    }
+
+    .achievement-icon {
+        font-size: 1.5rem;
+    }
+
+    .achievement-name {
+        font-size: 1rem;
+    }
+
+    /* 确保事件横幅在移动端正确显示 */
+    .event-banner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: auto;
+        max-width: 90vw;
+        z-index: 250;
+    }
+
+    .event-content {
+        padding: 15px 25px;
+        gap: 10px;
+    }
+
+    .event-icon {
+        font-size: 1.5rem;
+    }
+
+    .event-text {
+        font-size: 1.2rem;
+    }
+
+    /* 修复触摸区域覆盖问题 */
+    .touch-zone {
+        position: fixed;
+        top: 0;
+        bottom: 120px;
+        z-index: 50;
+        background: transparent;
+    }
+
+    .touch-zone.left {
+        left: 0;
+        right: 50%;
+        width: auto;
+    }
+
+    .touch-zone.right {
+        right: 0;
+        left: 50%;
+        width: auto;
+    }
+
+    /* 确保触摸指示器显示 */
+    .touch-indicator {
+        position: absolute;
+        bottom: 50%;
+        transform: translateY(50%);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255, 215, 0, 0.2);
+        border: 2px solid rgba(255, 215, 0, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        color: rgba(255, 215, 0, 0.8);
+        pointer-events: none;
+        animation: touchPulse 2s ease-in-out infinite;
+    }
+
+    .touch-zone.left .touch-indicator {
+        left: 20px;
+        right: auto;
+    }
+
+    .touch-zone.right .touch-indicator {
+        right: 20px;
+        left: auto;
+    }
+
+    /* 修复暂停按钮位置 */
+    .pause-btn-3d {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        width: 44px;
+        height: 44px;
+        z-index: 150;
+    }
+
+    .pause-icon {
+        font-size: 1.2rem;
+    }
+}
+
+/* 小屏幕手机进一步优化 */
+@media (max-width: 480px) {
+    .touch-zone {
+        bottom: 100px;
+    }
+
+    .touch-indicator {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+    }
+
+    .touch-zone.left .touch-indicator {
+        left: 15px;
+    }
+
+    .touch-zone.right .touch-indicator {
+        right: 15px;
+    }
+
+    .achievement-toast-3d {
+        top: 80px;
+    }
+
+    .achievement-content {
+        padding: 10px 15px;
+    }
+
+    .event-content {
+        padding: 12px 20px;
+    }
+
+    .pause-btn-3d {
+        top: 8px;
+        right: 8px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .pause-icon {
+        font-size: 1rem;
+    }
+}
+
+/* 超小屏幕 */
+@media (max-width: 360px) {
+    .touch-zone {
+        bottom: 90px;
+    }
+
+    .touch-indicator {
+        width: 44px;
+        height: 44px;
+        font-size: 1.1rem;
+    }
+
+    .touch-zone.left .touch-indicator {
+        left: 10px;
+    }
+
+    .touch-zone.right .touch-indicator {
+        right: 10px;
+    }
+
+    .achievement-toast-3d {
+        top: 70px;
+        max-width: 95vw;
+    }
+
+    .achievement-content {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+
+    .achievement-icon {
+        font-size: 1.3rem;
+    }
+
+    .achievement-name {
+        font-size: 0.9rem;
+    }
+
+    .event-content {
+        padding: 10px 15px;
+    }
+
+    .event-icon {
+        font-size: 1.3rem;
+    }
+
+    .event-text {
+        font-size: 1rem;
+    }
+
+    .pause-btn-3d {
+        top: 6px;
+        right: 6px;
+        width: 36px;
+        height: 36px;
+    }
+
+    .pause-icon {
+        font-size: 0.9rem;
     }
 }
