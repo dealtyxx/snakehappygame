@@ -1021,19 +1021,32 @@ body {
     left: 0;
     right: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 15px;
+    gap: 8px;
     color: var(--gold-light);
     font-size: 0.8rem;
     opacity: 0.8;
     z-index: 20;
 }
 
+.footer-college > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .footer-line {
     width: 50px;
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+.copyright {
+    font-size: 0.65rem;
+    color: rgba(255, 215, 0, 0.6);
+    margin-top: 5px;
 }
 
 /* ==================== 游戏页面3D ==================== */
@@ -1130,6 +1143,12 @@ body {
     z-index: 2;
 }
 
+.score-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
 .score-icon {
     font-size: 1.5rem;
     animation: scoreIconBounce 1s ease-in-out infinite;
@@ -1153,6 +1172,7 @@ body {
     color: var(--gold-primary);
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
     transition: transform 0.1s;
+    line-height: 1;
 }
 
 .score-value-3d.bump {
@@ -1242,20 +1262,23 @@ body {
 
 .level-inner {
     display: flex;
-    align-items: baseline;
-    gap: 5px;
+    align-items: center;
+    gap: 3px;
 }
 
 .level-prefix, .level-suffix {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--red-dark);
     font-weight: bold;
+    line-height: 1;
 }
 
 .level-num {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: bold;
     color: var(--red-dark);
+    line-height: 1;
+    margin: 0 2px;
 }
 
 .level-glow {
@@ -2369,10 +2392,12 @@ body {
 
     .level-num {
         font-size: 1.3rem;
+        line-height: 1;
     }
 
     .level-prefix, .level-suffix {
-        font-size: 0.65rem;
+        font-size: 0.8rem;
+        line-height: 1;
     }
 
     /* 时间面板缩小 */
@@ -2489,6 +2514,12 @@ body {
 
     .level-num {
         font-size: 1.1rem;
+        line-height: 1;
+    }
+
+    .level-prefix, .level-suffix {
+        font-size: 0.7rem;
+        line-height: 1;
     }
 
     .skill-bar-3d {
@@ -4172,6 +4203,19 @@ body {
     font-size: 0.9rem;
 }
 
+.lb-loading {
+    text-align: center;
+    padding: 20px;
+    color: rgba(255, 215, 0, 0.7);
+    font-size: 0.9rem;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
 .leaderboard-footer {
     margin-top: 12px;
     padding-top: 10px;
@@ -4568,8 +4612,36 @@ body {
 
 /* === 游戏页面移动端深度优化 === */
 @media (max-width: 768px) {
+    /* 📱 移动端性能优化 - 硬件加速 */
+    #game-screen,
+    #game-canvas,
+    .touch-zone,
+    .touch-indicator,
+    .score-popup-3d,
+    .achievement-toast-3d {
+        will-change: transform;
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+
     #game-screen {
         touch-action: none;
+    }
+
+    /* 📱 减少复杂阴影提升性能 */
+    .score-panel-3d,
+    .level-badge-3d,
+    .skill-btn-3d {
+        box-shadow: none !important;
+        filter: none !important;
+    }
+
+    /* 📱 简化3D变换 */
+    .score-panel-3d,
+    .level-badge-3d,
+    .time-ring-3d {
+        transform: none !important;
     }
 
     /* 触摸区域透明度降低 */
@@ -4580,6 +4652,14 @@ body {
     .touch-indicator {
         background: rgba(255, 215, 0, 0.15);
         border: 2px solid rgba(255, 215, 0, 0.3);
+        /* 📱 减少动画 */
+        animation: none !important;
+    }
+
+    /* 📱 触摸按下时的简单反馈 */
+    .touch-indicator:active {
+        background: rgba(255, 215, 0, 0.4);
+        transform: scale(0.95);
     }
 
     /* 暂停按钮 */
@@ -4587,6 +4667,11 @@ body {
         width: 40px;
         height: 40px;
         font-size: 1rem;
+    }
+
+    /* 📱 飘字动画简化 */
+    .score-popup-3d {
+        animation-duration: 0.8s !important;
     }
 }
 
@@ -5527,6 +5612,8 @@ body {
     image-rendering: -webkit-optimize-contrast;
     font-feature-settings: normal;
     font-variant-ligatures: normal;
+    /* emoji 专用字体 */
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
 }
 
 /* 移动端 emoji 字体优化 */
@@ -5539,7 +5626,11 @@ body {
     .achievement-icon,
     .event-icon,
     .reward-emoji,
-    .touch-indicator {
+    .touch-indicator,
+    .score-icon,
+    .combo-fire,
+    .pause-icon,
+    .hint-icon {
         /* 使用系统原生 emoji 字体 */
         font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
         /* 防止字体替换 */
@@ -5548,40 +5639,80 @@ body {
         /* 高清渲染 */
         -webkit-text-stroke: 0;
         paint-order: stroke fill;
+        /* 防止缩放模糊 */
+        will-change: transform;
+        transform: translateZ(0) scale(1);
     }
 
     /* 增大图标以保持清晰 */
     .skill-icon-3d {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
     }
 
     .buff-icon {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
 
     .touch-indicator {
-        font-size: 1.8rem;
+        font-size: 2rem;
         font-weight: bold;
+    }
+
+    .score-icon {
+        font-size: 1.4rem;
+    }
+
+    .combo-fire {
+        font-size: 1.4rem;
+    }
+
+    .pause-icon {
+        font-size: 1.2rem;
+    }
+
+    .hint-icon {
+        font-size: 1.3rem;
     }
 }
 
-/* 高分辨率屏幕额外优化 */
+/* 高分辨率屏幕额外优化 (2x Retina) */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     .snake-emoji,
     .item-emoji,
     .skill-icon-3d,
-    .reward-emoji {
+    .reward-emoji,
+    .touch-indicator,
+    .score-icon,
+    .combo-fire,
+    .pause-icon {
         /* 2x 屏幕锐化 */
         -webkit-font-smoothing: subpixel-antialiased;
+        /* 强制高清渲染 */
+        filter: none;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
     }
 }
 
+/* 超高分辨率屏幕 (3x) */
 @media (-webkit-min-device-pixel-ratio: 3), (min-resolution: 350dpi) {
     .snake-emoji,
     .item-emoji,
     .skill-icon-3d,
-    .reward-emoji {
+    .reward-emoji,
+    .touch-indicator,
+    .score-icon {
         /* 3x 屏幕优化 */
         text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* 3x屏幕增大图标尺寸 */
+    .touch-indicator {
+        font-size: 2.2rem;
+    }
+
+    .skill-icon-3d {
+        font-size: 2rem;
     }
 }

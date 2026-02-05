@@ -4,6 +4,120 @@
  * 完整版 - 3D视觉 + 声光电反馈 + 丰富游戏系统
  */
 
+// ==================== Firebase 全局排名配置 ====================
+// 🔥 请在 Firebase Console 创建项目后替换以下配置
+// 步骤：1. 访问 https://console.firebase.google.com/
+//      2. 创建新项目 → 创建 Realtime Database
+//      3. 设置规则为: {"rules": {".read": true, ".write": true}}
+//      4. 复制配置信息替换下方内容
+const FIREBASE_CONFIG = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Firebase 全局排名系统
+const GlobalLeaderboard = {
+    db: null,
+    isOnline: false,
+
+    // 初始化 Firebase
+    init() {
+        try {
+            // 检查配置是否已设置
+            if (FIREBASE_CONFIG.apiKey === "YOUR_API_KEY") {
+                console.log('⚠️ Firebase 未配置，使用本地排名');
+                return false;
+            }
+
+            // 初始化 Firebase
+            if (typeof firebase !== 'undefined') {
+                firebase.initializeApp(FIREBASE_CONFIG);
+                this.db = firebase.database();
+                this.isOnline = true;
+                console.log('✅ Firebase 全局排名已启用');
+                return true;
+            }
+        } catch (error) {
+            console.log('⚠️ Firebase 初始化失败，使用本地排名:', error.message);
+        }
+        return false;
+    },
+
+    // 提交分数到全局排行榜
+    async submitScore(score, playerName = '匿名玩家') {
+        if (!this.isOnline || !this.db) return null;
+
+        try {
+            const entry = {
+                score: score,
+                name: playerName,
+                time: Date.now(),
+                timeStr: new Date().toLocaleString('zh-CN', {
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+            };
+
+            // 推送到 Firebase
+            const newRef = await this.db.ref('leaderboard').push(entry);
+            entry.id = newRef.key;
+
+            console.log('✅ 分数已提交到全局排行榜');
+            return entry;
+        } catch (error) {
+            console.error('❌ 提交分数失败:', error);
+            return null;
+        }
+    },
+
+    // 获取全局排行榜（前10名）
+    async getTopScores(limit = 10) {
+        if (!this.isOnline || !this.db) return [];
+
+        try {
+            const snapshot = await this.db.ref('leaderboard')
+                .orderByChild('score')
+                .limitToLast(limit)
+                .once('value');
+
+            const scores = [];
+            snapshot.forEach(child => {
+                scores.push({ id: child.key, ...child.val() });
+            });
+
+            // 按分数降序排列
+            scores.sort((a, b) => b.score - a.score);
+            return scores;
+        } catch (error) {
+            console.error('❌ 获取排行榜失败:', error);
+            return [];
+        }
+    },
+
+    // 获取玩家排名
+    async getPlayerRank(score) {
+        if (!this.isOnline || !this.db) return -1;
+
+        try {
+            const snapshot = await this.db.ref('leaderboard')
+                .orderByChild('score')
+                .startAt(score)
+                .once('value');
+
+            return snapshot.numChildren();
+        } catch (error) {
+            return -1;
+        }
+    }
+};
+
 // ==================== 游戏配置 ====================
 const CONFIG = {
     // 基础设置
@@ -1032,21 +1146,33 @@ const SocialSystem = {
     // 当前排名（本次游戏）
     currentRank: 0,
     currentEntry: null,
+    globalLeaderboard: [], // 全局排行榜缓存
 
-    // 获取排行榜数据
-    getLeaderboard() {
+    // 获取本地排行榜数据（备用）
+    getLocalLeaderboard() {
         const stored = localStorage.getItem('snakeGame_leaderboard');
         return stored ? JSON.parse(stored) : [];
     },
 
-    // 保存排行榜
-    saveLeaderboard(leaderboard) {
+    // 保存本地排行榜
+    saveLocalLeaderboard(leaderboard) {
         localStorage.setItem('snakeGame_leaderboard', JSON.stringify(leaderboard));
     },
 
+    // 获取排行榜数据（优先全局）
+    async getLeaderboard() {
+        if (GlobalLeaderboard.isOnline) {
+            const globalScores = await GlobalLeaderboard.getTopScores(10);
+            if (globalScores.length > 0) {
+                this.globalLeaderboard = globalScores;
+                return globalScores;
+            }
+        }
+        return this.getLocalLeaderboard();
+    },
+
     // 更新排行榜（记录每次成绩）
-    updateLeaderboard(score) {
-        const leaderboard = this.getLeaderboard();
+    async updateLeaderboard(score) {
         const now = new Date();
         const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -1054,41 +1180,60 @@ const SocialSystem = {
         const newEntry = {
             score: score,
             time: timeStr,
-            id: Date.now()  // 唯一标识
+            timeStr: timeStr,
+            id: Date.now()
         };
 
-        // 添加新分数
-        leaderboard.push(newEntry);
+        // 🔥 提交到全局排行榜
+        if (GlobalLeaderboard.isOnline) {
+            const globalEntry = await GlobalLeaderboard.submitScore(score, '玩家');
+            if (globalEntry) {
+                newEntry.id = globalEntry.id;
+            }
+        }
 
-        // 按分数排序
-        leaderboard.sort((a, b) => b.score - a.score);
+        // 同时保存到本地
+        const localLeaderboard = this.getLocalLeaderboard();
+        localLeaderboard.push(newEntry);
+        localLeaderboard.sort((a, b) => b.score - a.score);
+        this.saveLocalLeaderboard(localLeaderboard.slice(0, 10));
 
-        // 保留前10名
-        const top10 = leaderboard.slice(0, 10);
-        this.saveLeaderboard(top10);
+        this.currentEntry = newEntry;
 
-        // 计算本次排名
-        const rank = top10.findIndex(item => item.id === newEntry.id);
-        if (rank !== -1) {
-            this.currentRank = rank + 1;
-            this.currentEntry = newEntry;
+        // 计算排名
+        if (GlobalLeaderboard.isOnline) {
+            const globalScores = await GlobalLeaderboard.getTopScores(10);
+            this.globalLeaderboard = globalScores;
+            const rank = globalScores.findIndex(item => item.id === newEntry.id);
+            this.currentRank = rank !== -1 ? rank + 1 : 0;
         } else {
-            // 未进入前10
-            this.currentRank = 0;
-            this.currentEntry = newEntry;
+            const rank = localLeaderboard.findIndex(item => item.id === newEntry.id);
+            this.currentRank = rank !== -1 && rank < 10 ? rank + 1 : 0;
         }
 
         return this.currentRank;
     },
 
     // 渲染排行榜（显示前10名）
-    renderLeaderboard() {
+    async renderLeaderboard() {
         const list = document.getElementById('leaderboard-list');
         const rankInfo = document.getElementById('current-rank-info');
+        const title = document.querySelector('.leaderboard-title');
         if (!list) return;
 
-        const leaderboard = this.getLeaderboard();
+        // 显示加载状态
+        list.innerHTML = '<div class="lb-loading">加载排行榜...</div>';
+
+        // 获取排行榜数据
+        const leaderboard = await this.getLeaderboard();
         const rankIcons = ['🥇', '🥈', '🥉', '4', '5', '6', '7', '8', '9', '10'];
+
+        // 更新标题显示在线/本地状态
+        if (title) {
+            title.innerHTML = GlobalLeaderboard.isOnline
+                ? '🌐 全球排行榜'
+                : '📱 本地排行榜';
+        }
 
         if (leaderboard.length === 0) {
             list.innerHTML = '<div class="lb-empty">暂无记录，快来挑战吧！</div>';
@@ -1096,11 +1241,13 @@ const SocialSystem = {
             list.innerHTML = leaderboard.slice(0, 10).map((item, index) => {
                 const isCurrentGame = this.currentEntry && item.id === this.currentEntry.id;
                 const rankClass = index < 3 ? ['gold', 'silver', 'bronze'][index] : '';
+                const displayTime = item.timeStr || item.time || '';
+                const displayName = item.name || '';
                 return `
                     <div class="lb-row ${rankClass} ${isCurrentGame ? 'current' : ''}">
                         <span class="lb-rank">${rankIcons[index]}</span>
                         <span class="lb-score-val">${item.score}</span>
-                        <span class="lb-time">${item.time}</span>
+                        <span class="lb-time">${displayName ? displayName + ' · ' : ''}${displayTime}</span>
                         ${isCurrentGame ? '<span class="lb-new">本次</span>' : ''}
                     </div>
                 `;
@@ -1110,7 +1257,7 @@ const SocialSystem = {
         // 更新本次排名信息
         if (rankInfo) {
             if (this.currentRank > 0) {
-                rankInfo.textContent = `🎉 本次排名: 第${this.currentRank}名`;
+                rankInfo.textContent = `🎉 ${GlobalLeaderboard.isOnline ? '全球' : '本地'}排名: 第${this.currentRank}名`;
                 rankInfo.className = 'rank-success';
             } else if (this.currentEntry) {
                 rankInfo.textContent = `本次得分: ${this.currentEntry.score} (未进入前10)`;
@@ -1305,10 +1452,19 @@ class Player {
         this.feverGlow = 0;
     }
 
+    // 📱 获取canvas逻辑尺寸
+    getLogicalSize() {
+        return {
+            width: this.canvas.logicalWidth || this.canvas.width,
+            height: this.canvas.logicalHeight || this.canvas.height
+        };
+    }
+
     updateResponsiveMetrics(centerOnScreen = false) {
         const { isMobile, isSmallMobile, isTinyMobile } = getResponsiveFlags();
+        const { width: canvasWidth, height: canvasHeight } = this.getLogicalSize();
         const previousCenter = centerOnScreen
-            ? this.canvas.width / 2
+            ? canvasWidth / 2
             : (this.x + this.width / 2);
 
         this.width = isTinyMobile ? 40 : (isSmallMobile ? 45 : (isMobile ? 50 : 70));
@@ -1319,20 +1475,22 @@ class Player {
         this.speed = isMobile ? 9 : CONFIG.PLAYER_SPEED;
 
         const minX = this.edgePadding;
-        const maxX = Math.max(minX, this.canvas.width - this.width - this.edgePadding);
+        const maxX = Math.max(minX, canvasWidth - this.width - this.edgePadding);
         this.x = Math.max(minX, Math.min(maxX, previousCenter - this.width / 2));
         this.targetX = this.x;
-        this.y = this.canvas.height - this.height - this.bottomOffset;
+        this.y = canvasHeight - this.height - this.bottomOffset;
     }
 
     update(deltaTime) {
+        const { width: canvasWidth, height: canvasHeight } = this.getLogicalSize();
+
         // 平滑移动
         const diff = this.targetX - this.x;
         this.x += diff * 0.2;
 
         // 边界限制
         const minX = this.edgePadding;
-        const maxX = Math.max(minX, this.canvas.width - this.width - this.edgePadding);
+        const maxX = Math.max(minX, canvasWidth - this.width - this.edgePadding);
         this.x = Math.max(minX, Math.min(maxX, this.x));
         this.targetX = Math.max(minX, Math.min(maxX, this.targetX));
 
@@ -1354,7 +1512,7 @@ class Player {
         }
 
         // 更新y位置（使用保存的底部偏移）
-        this.y = this.canvas.height - this.height - this.bottomOffset;
+        this.y = canvasHeight - this.height - this.bottomOffset;
     }
 
     moveLeft() {
@@ -1362,7 +1520,8 @@ class Player {
     }
 
     moveRight() {
-        const maxX = Math.max(this.edgePadding, this.canvas.width - this.width - this.edgePadding);
+        const { width: canvasWidth } = this.getLogicalSize();
+        const maxX = Math.max(this.edgePadding, canvasWidth - this.width - this.edgePadding);
         this.targetX = Math.min(maxX, this.targetX + this.speed);
     }
 
@@ -1450,7 +1609,9 @@ class Item {
         this.width = isTinyMobile ? 30 : (isSmallMobile ? 35 : (isMobile ? 38 : 50));
         this.height = this.width;
         this.spawnPadding = isTinyMobile ? 2 : (isSmallMobile ? 3 : (isMobile ? 4 : 8));
-        const spawnRange = Math.max(1, canvas.width - this.width - this.spawnPadding * 2);
+        // 📱 使用canvas逻辑尺寸
+        const canvasWidth = canvas.logicalWidth || canvas.width;
+        const spawnRange = Math.max(1, canvasWidth - this.width - this.spawnPadding * 2);
         this.x = this.spawnPadding + Math.random() * spawnRange;
         this.y = -this.height;
 
@@ -1503,8 +1664,10 @@ class Item {
         this.wobble += this.wobbleSpeed;
         this.x += Math.sin(this.wobble) * 0.5;
 
+        // 📱 使用canvas逻辑尺寸
+        const canvasWidth = this.canvas.logicalWidth || this.canvas.width;
         const minX = this.spawnPadding;
-        const maxX = Math.max(minX, this.canvas.width - this.width - this.spawnPadding);
+        const maxX = Math.max(minX, canvasWidth - this.width - this.spawnPadding);
         this.x = Math.max(minX, Math.min(maxX, this.x));
 
         // 旋转
@@ -1594,7 +1757,9 @@ class Item {
     }
 
     isOffScreen() {
-        return this.y > this.canvas.height + 50;
+        // 📱 使用canvas逻辑尺寸
+        const canvasHeight = this.canvas.logicalHeight || this.canvas.height;
+        return this.y > canvasHeight + 50;
     }
 }
 
@@ -1652,11 +1817,22 @@ class BgParticle {
     constructor(canvas) {
         this.canvas = canvas;
         this.reset();
-        this.y = Math.random() * canvas.height;
+        // 📱 使用逻辑尺寸
+        const canvasHeight = canvas.logicalHeight || canvas.height;
+        this.y = Math.random() * canvasHeight;
+    }
+
+    // 📱 获取逻辑尺寸
+    getLogicalSize() {
+        return {
+            width: this.canvas.logicalWidth || this.canvas.width,
+            height: this.canvas.logicalHeight || this.canvas.height
+        };
     }
 
     reset() {
-        this.x = Math.random() * this.canvas.width;
+        const { width } = this.getLogicalSize();
+        this.x = Math.random() * width;
         this.y = -10;
         this.size = Math.random() * 3 + 1;
         this.speed = Math.random() * 1.5 + 0.5;
@@ -1666,11 +1842,12 @@ class BgParticle {
     }
 
     update() {
+        const { height } = this.getLogicalSize();
         this.y += this.speed;
         this.x += Math.sin(this.y * 0.01) * 0.3;
         this.twinkle += 0.05;
 
-        if (this.y > this.canvas.height + 10) {
+        if (this.y > height + 10) {
             this.reset();
         }
     }
@@ -1690,9 +1867,12 @@ class BgParticle {
 class Firework {
     constructor(canvas) {
         this.canvas = canvas;
-        this.x = Math.random() * canvas.width;
-        this.y = canvas.height;
-        this.targetY = Math.random() * canvas.height * 0.5 + 50;
+        // 📱 使用逻辑尺寸
+        const canvasWidth = canvas.logicalWidth || canvas.width;
+        const canvasHeight = canvas.logicalHeight || canvas.height;
+        this.x = Math.random() * canvasWidth;
+        this.y = canvasHeight;
+        this.targetY = Math.random() * canvasHeight * 0.5 + 50;
         this.speed = 8 + Math.random() * 4;
         this.exploded = false;
         this.particles = [];
@@ -1847,7 +2027,11 @@ function hideEventBanner() {
 
 // ==================== 粒子效果 ====================
 function createCatchParticles(x, y, isPositive, isBonus) {
-    const count = isBonus ? 25 : 15;
+    const { isMobile } = getResponsiveFlags();
+
+    // 📱 移动端减少粒子数量提升性能
+    const baseCount = isBonus ? 25 : 15;
+    const count = isMobile ? Math.floor(baseCount * 0.4) : baseCount;
     const colors = isPositive
         ? ['#FFD700', '#FFA500', '#FF6B6B', '#FFFF00']
         : ['#666', '#444', '#888'];
@@ -1858,20 +2042,21 @@ function createCatchParticles(x, y, isPositive, isBonus) {
             vx: (Math.random() - 0.5) * 12,
             vy: -Math.random() * 10 - 3,
             size: isBonus ? 10 : 6,
-            decay: 0.02
+            decay: isMobile ? 0.03 : 0.02 // 📱 移动端更快消失
         }));
     }
 
-    // Emoji粒子
+    // Emoji粒子（📱移动端减少）
     if (isBonus) {
         const emojis = ['✨', '⭐', '💫', '🌟'];
-        for (let i = 0; i < 8; i++) {
+        const emojiCount = isMobile ? 3 : 8;
+        for (let i = 0; i < emojiCount; i++) {
             particles.push(new Particle(x, y, {
                 emoji: emojis[Math.floor(Math.random() * emojis.length)],
                 vx: (Math.random() - 0.5) * 8,
                 vy: -Math.random() * 6 - 4,
-                size: 25,
-                decay: 0.015,
+                size: isMobile ? 20 : 25,
+                decay: isMobile ? 0.025 : 0.015,
                 gravity: 0.08
             }));
         }
@@ -2235,10 +2420,18 @@ function initBgCanvas() {
     if (!canvas) return;
 
     const viewport = getViewportDimensions();
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    const dpr = getDevicePixelRatio();
+
+    // 📱 高分辨率支持
+    canvas.width = viewport.width * dpr;
+    canvas.height = viewport.height * dpr;
+    canvas.style.width = `${viewport.width}px`;
+    canvas.style.height = `${viewport.height}px`;
+    canvas.logicalWidth = viewport.width;
+    canvas.logicalHeight = viewport.height;
 
     const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // 创建背景粒子
     const menuParticles = [];
@@ -2247,7 +2440,7 @@ function initBgCanvas() {
     }
 
     function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, viewport.width, viewport.height);
         menuParticles.forEach(p => {
             p.update();
             p.draw(ctx);
@@ -2282,14 +2475,22 @@ function initFireworkCanvas() {
     if (!canvas) return;
 
     const viewport = getViewportDimensions();
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    const dpr = getDevicePixelRatio();
+
+    // 📱 高分辨率支持
+    canvas.width = viewport.width * dpr;
+    canvas.height = viewport.height * dpr;
+    canvas.style.width = `${viewport.width}px`;
+    canvas.style.height = `${viewport.height}px`;
+    canvas.logicalWidth = viewport.width;
+    canvas.logicalHeight = viewport.height;
 
     const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     function animate() {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, viewport.width, viewport.height);
 
         // 随机生成烟花
         if (Math.random() < 0.05) {
@@ -2310,26 +2511,43 @@ function initFireworkCanvas() {
 }
 
 // ==================== 游戏循环 ====================
-function gameLoop() {
+// 📱 移动端性能优化
+let lastFrameTime = 0;
+const TARGET_FPS = 60;
+const FRAME_TIME = 1000 / TARGET_FPS;
+let cachedGradient = null;
+let gradientCacheKey = '';
+
+function gameLoop(timestamp) {
     if (!state.isRunning || state.isPaused) return;
 
-    update();
+    // 📱 帧率控制（移动端限制到60fps）
+    const deltaTime = timestamp - lastFrameTime;
+    if (deltaTime < FRAME_TIME * 0.9) {
+        state.timers.animation = requestAnimationFrame(gameLoop);
+        return;
+    }
+    lastFrameTime = timestamp;
+
+    update(deltaTime);
     render();
 
     state.timers.animation = requestAnimationFrame(gameLoop);
 }
 
-function update() {
+function update(deltaTime) {
+    const { isMobile } = getResponsiveFlags();
+
     // 更新玩家
     if (input.left) player.moveLeft();
     if (input.right) player.moveRight();
-    player.update();
+    player.update(deltaTime);
 
     // 更新物品
     const playerBounds = player.getBounds();
 
     items = items.filter(item => {
-        item.update();
+        item.update(deltaTime);
 
         // 碰撞检测
         if (checkCollision(playerBounds, item.getBounds())) {
@@ -2340,44 +2558,74 @@ function update() {
         return !item.isOffScreen();
     });
 
-    // 更新粒子
-    particles.forEach(p => p.update());
-    particles = particles.filter(p => !p.isDead());
+    // 更新粒子（📱移动端减少粒子更新频率）
+    const particleUpdateRate = isMobile ? 2 : 1;
+    if (!isMobile || state.frameCount % particleUpdateRate === 0) {
+        particles.forEach(p => p.update());
+        particles = particles.filter(p => !p.isDead());
+    }
 
-    // 更新背景粒子
-    bgParticles.forEach(p => p.update());
+    // 更新背景粒子（📱移动端降低更新频率）
+    if (!isMobile || state.frameCount % 2 === 0) {
+        bgParticles.forEach(p => p.update());
+    }
+
+    state.frameCount = (state.frameCount || 0) + 1;
+}
+
+// 📱 获取canvas逻辑尺寸（用于高分辨率适配）
+function getCanvasLogicalSize(canvas) {
+    return {
+        width: canvas.logicalWidth || canvas.width,
+        height: canvas.logicalHeight || canvas.height
+    };
 }
 
 function render() {
     const ctx = DOM.ctx;
     const canvas = DOM.gameCanvas;
+    const { width, height } = getCanvasLogicalSize(canvas);
+    const { isMobile } = getResponsiveFlags();
 
     // 清空画布
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, width, height);
 
-    // 绘制渐变背景
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#1a0a2e');
-    gradient.addColorStop(0.3, '#2d1b4e');
-    gradient.addColorStop(0.7, '#3d1f5e');
-    gradient.addColorStop(1, '#1a0a2e');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // 📱 缓存渐变背景（避免每帧重新创建）
+    const cacheKey = `${width}-${height}`;
+    if (!cachedGradient || gradientCacheKey !== cacheKey) {
+        cachedGradient = ctx.createLinearGradient(0, 0, 0, height);
+        cachedGradient.addColorStop(0, '#1a0a2e');
+        cachedGradient.addColorStop(0.3, '#2d1b4e');
+        cachedGradient.addColorStop(0.7, '#3d1f5e');
+        cachedGradient.addColorStop(1, '#1a0a2e');
+        gradientCacheKey = cacheKey;
+    }
+    ctx.fillStyle = cachedGradient;
+    ctx.fillRect(0, 0, width, height);
 
-    // 福运爆发时的背景特效
+    // 福运爆发时的背景特效（📱移动端简化效果）
     if (state.buffs.fever) {
-        const feverOverlay = ctx.createRadialGradient(
-            canvas.width / 2, canvas.height / 2, 0,
-            canvas.width / 2, canvas.height / 2, canvas.width
-        );
-        feverOverlay.addColorStop(0, 'rgba(255, 100, 0, 0.1)');
-        feverOverlay.addColorStop(1, 'rgba(255, 0, 0, 0)');
-        ctx.fillStyle = feverOverlay;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (isMobile) {
+            // 📱 移动端使用简单颜色覆盖
+            ctx.fillStyle = 'rgba(255, 100, 0, 0.08)';
+            ctx.fillRect(0, 0, width, height);
+        } else {
+            const feverOverlay = ctx.createRadialGradient(
+                width / 2, height / 2, 0,
+                width / 2, height / 2, width
+            );
+            feverOverlay.addColorStop(0, 'rgba(255, 100, 0, 0.1)');
+            feverOverlay.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            ctx.fillStyle = feverOverlay;
+            ctx.fillRect(0, 0, width, height);
+        }
     }
 
-    // 绘制星空点点
-    bgParticles.forEach(p => p.draw(ctx));
+    // 绘制星空点点（📱移动端减少绘制数量）
+    const bgDrawCount = isMobile ? Math.min(bgParticles.length, 20) : bgParticles.length;
+    for (let i = 0; i < bgDrawCount; i++) {
+        bgParticles[i].draw(ctx);
+    }
 
     // 绘制物品
     items.forEach(item => item.draw(ctx));
@@ -2385,8 +2633,11 @@ function render() {
     // 绘制玩家
     player.draw(ctx);
 
-    // 绘制粒子特效
-    particles.forEach(p => p.draw(ctx));
+    // 绘制粒子特效（📱移动端限制粒子数量）
+    const particleDrawCount = isMobile ? Math.min(particles.length, 30) : particles.length;
+    for (let i = 0; i < particleDrawCount; i++) {
+        particles[i].draw(ctx);
+    }
 }
 
 // ==================== 页面切换 ====================
@@ -2488,9 +2739,11 @@ function startGame() {
     // 创建玩家
     player = new Player(DOM.gameCanvas);
 
-    // 创建背景粒子
+    // 创建背景粒子（📱移动端减少粒子数量提升性能）
+    const { isMobile } = getResponsiveFlags();
+    const bgParticleCount = isMobile ? 30 : 80;
     bgParticles = [];
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < bgParticleCount; i++) {
         bgParticles.push(new BgParticle(DOM.gameCanvas));
     }
 
@@ -2607,6 +2860,11 @@ function clearAllTimers() {
 }
 
 // ==================== Canvas 尺寸 ====================
+// 📱 高分辨率支持：获取设备像素比
+function getDevicePixelRatio() {
+    return Math.min(window.devicePixelRatio || 1, 3); // 限制最大3x避免性能问题
+}
+
 function resizeGameCanvas() {
     if (!DOM.gameCanvas) return;
 
@@ -2615,10 +2873,20 @@ function resizeGameCanvas() {
     const isMobile = viewport.width <= 768;
     const maxWidth = isMobile ? Math.min(viewport.width, 420) : viewport.width;
 
-    DOM.gameCanvas.width = maxWidth;
-    DOM.gameCanvas.height = viewport.height;
+    // 📱 高分辨率支持
+    const dpr = getDevicePixelRatio();
+
+    // 设置实际像素尺寸（高分辨率）
+    DOM.gameCanvas.width = maxWidth * dpr;
+    DOM.gameCanvas.height = viewport.height * dpr;
+
+    // 设置CSS显示尺寸
     DOM.gameCanvas.style.width = `${maxWidth}px`;
     DOM.gameCanvas.style.height = `${viewport.height}px`;
+
+    // 缩放绘图上下文以适应高分辨率
+    const ctx = DOM.gameCanvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // 📱 移动端画布居中
     if (isMobile && viewport.width > maxWidth) {
@@ -2626,6 +2894,10 @@ function resizeGameCanvas() {
     } else {
         DOM.gameCanvas.style.marginLeft = '0';
     }
+
+    // 更新逻辑尺寸（给player和item使用的是逻辑尺寸，不是物理像素）
+    DOM.gameCanvas.logicalWidth = maxWidth;
+    DOM.gameCanvas.logicalHeight = viewport.height;
 
     if (player) {
         player.canvas = DOM.gameCanvas;
@@ -2636,7 +2908,7 @@ function resizeGameCanvas() {
         item.canvas = DOM.gameCanvas;
         const padding = item.spawnPadding || 0;
         const minX = padding;
-        const maxX = Math.max(minX, DOM.gameCanvas.width - item.width - padding);
+        const maxX = Math.max(minX, maxWidth - item.width - padding);
         item.x = Math.max(minX, Math.min(maxX, item.x));
     });
 }
@@ -2654,15 +2926,30 @@ function handleViewportResize() {
         }
 
         const viewport = getViewportDimensions();
+        const dpr = getDevicePixelRatio();
         const bgCanvas = document.getElementById('bg-canvas-3d');
         if (bgCanvas) {
-            bgCanvas.width = viewport.width;
-            bgCanvas.height = viewport.height;
+            // 📱 高分辨率支持
+            bgCanvas.width = viewport.width * dpr;
+            bgCanvas.height = viewport.height * dpr;
+            bgCanvas.style.width = `${viewport.width}px`;
+            bgCanvas.style.height = `${viewport.height}px`;
+            bgCanvas.logicalWidth = viewport.width;
+            bgCanvas.logicalHeight = viewport.height;
+            const ctx = bgCanvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
         if (DOM.fireworkCanvas && DOM.endScreen?.classList.contains('active')) {
-            DOM.fireworkCanvas.width = viewport.width;
-            DOM.fireworkCanvas.height = viewport.height;
+            // 📱 高分辨率支持
+            DOM.fireworkCanvas.width = viewport.width * dpr;
+            DOM.fireworkCanvas.height = viewport.height * dpr;
+            DOM.fireworkCanvas.style.width = `${viewport.width}px`;
+            DOM.fireworkCanvas.style.height = `${viewport.height}px`;
+            DOM.fireworkCanvas.logicalWidth = viewport.width;
+            DOM.fireworkCanvas.logicalHeight = viewport.height;
+            const ctx = DOM.fireworkCanvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
     });
 }
@@ -2758,6 +3045,8 @@ function bindEvents() {
 
     // 方式2：在游戏画布上滑动控制（手指跟随）
     let isTouching = false;
+    let lastTouchTime = 0;
+    const TOUCH_THROTTLE = 16; // 📱 限制触摸更新频率（约60fps）
 
     DOM.gameCanvas?.addEventListener('touchstart', (e) => {
         if (!state.isRunning || state.isPaused) return;
@@ -2769,8 +3058,10 @@ function bindEvents() {
         if (player) {
             const canvasRect = DOM.gameCanvas.getBoundingClientRect();
             const touchX = e.touches[0].clientX - canvasRect.left;
+            // 📱 使用逻辑尺寸
+            const canvasWidth = DOM.gameCanvas.logicalWidth || DOM.gameCanvas.width;
             const minX = player.edgePadding || 0;
-            const maxX = Math.max(minX, DOM.gameCanvas.width - player.width - minX);
+            const maxX = Math.max(minX, canvasWidth - player.width - minX);
             player.targetX = Math.max(minX, Math.min(maxX, touchX - player.width / 2));
         }
     }, { passive: false });
@@ -2779,12 +3070,19 @@ function bindEvents() {
         if (!state.isRunning || state.isPaused || !isTouching) return;
         e.preventDefault();
 
+        // 📱 节流处理，提升性能
+        const now = performance.now();
+        if (now - lastTouchTime < TOUCH_THROTTLE) return;
+        lastTouchTime = now;
+
         // 手指滑动，玩家跟随
         if (player) {
             const canvasRect = DOM.gameCanvas.getBoundingClientRect();
             const touchX = e.touches[0].clientX - canvasRect.left;
+            // 📱 使用逻辑尺寸
+            const canvasWidth = DOM.gameCanvas.logicalWidth || DOM.gameCanvas.width;
             const minX = player.edgePadding || 0;
-            const maxX = Math.max(minX, DOM.gameCanvas.width - player.width - minX);
+            const maxX = Math.max(minX, canvasWidth - player.width - minX);
             player.targetX = Math.max(minX, Math.min(maxX, touchX - player.width / 2));
         }
     }, { passive: false });
@@ -2886,6 +3184,9 @@ function init() {
     // 加载最高分
     state.highScore = parseInt(localStorage.getItem('snakeGame_highScore')) || 0;
     if (DOM.highScore) DOM.highScore.textContent = state.highScore;
+
+    // 🔥 初始化 Firebase 全局排名
+    GlobalLeaderboard.init();
 
     // 初始化音频系统
     AudioSystem.init();
