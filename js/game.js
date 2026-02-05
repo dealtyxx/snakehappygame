@@ -1169,10 +1169,16 @@ class Vector2 {
 class Player {
     constructor(canvas) {
         this.canvas = canvas;
-        this.width = 70;
-        this.height = 70;
+        // 📱 根据屏幕大小调整玩家尺寸
+        const isMobile = window.innerWidth <= 768;
+        const isSmallMobile = window.innerWidth <= 420;
+        this.width = isSmallMobile ? 55 : (isMobile ? 60 : 70);
+        this.height = isSmallMobile ? 55 : (isMobile ? 60 : 70);
+        // 📱 移动端底部留出更多空间给触摸按钮
+        const bottomOffset = isSmallMobile ? 80 : (isMobile ? 100 : 20);
         this.x = canvas.width / 2 - this.width / 2;
-        this.y = canvas.height - this.height - 20;
+        this.y = canvas.height - this.height - bottomOffset;
+        this.bottomOffset = bottomOffset;
         this.speed = CONFIG.PLAYER_SPEED;
         this.targetX = this.x;
 
@@ -1211,8 +1217,8 @@ class Player {
             this.feverGlow *= 0.9;
         }
 
-        // 更新y位置
-        this.y = this.canvas.height - this.height - 20;
+        // 更新y位置（使用保存的底部偏移）
+        this.y = this.canvas.height - this.height - this.bottomOffset;
     }
 
     moveLeft() {
@@ -1308,8 +1314,11 @@ class Item {
         // 🖼️ 获取物品图片
         this.image = ImageLoader.getItemImage(type);
 
-        this.width = 50;
-        this.height = 50;
+        // 📱 根据屏幕大小调整物品尺寸
+        const isMobile = window.innerWidth <= 768;
+        const isSmallMobile = window.innerWidth <= 420;
+        this.width = isSmallMobile ? 40 : (isMobile ? 45 : 50);
+        this.height = isSmallMobile ? 40 : (isMobile ? 45 : 50);
         this.x = Math.random() * (canvas.width - this.width);
         this.y = -this.height;
 
@@ -2474,7 +2483,8 @@ function resizeGameCanvas() {
 
     if (player) {
         player.canvas = DOM.gameCanvas;
-        player.y = DOM.gameCanvas.height - player.height - 20;
+        // 📱 使用玩家保存的底部偏移
+        player.y = DOM.gameCanvas.height - player.height - (player.bottomOffset || 20);
         player.x = Math.min(player.x, DOM.gameCanvas.width - player.width);
         player.targetX = player.x;
     }

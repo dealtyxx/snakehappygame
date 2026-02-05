@@ -2200,6 +2200,139 @@ body {
 }
 
 /* ==================== 响应式 ==================== */
+
+/* 📱 移动端游戏页面优化 */
+@media (max-width: 768px) {
+    /* HUD整体缩小 */
+    .game-hud-3d {
+        padding: 10px 12px;
+        padding-top: max(10px, env(safe-area-inset-top));
+    }
+
+    /* 分数面板缩小 */
+    .score-panel-3d {
+        padding: 8px 12px;
+        min-width: 90px;
+        border-radius: 15px;
+        transform: none;
+    }
+
+    .score-icon {
+        font-size: 1.2rem;
+    }
+
+    .score-value-3d {
+        font-size: 1.4rem;
+    }
+
+    .score-label {
+        font-size: 0.6rem;
+    }
+
+    /* 连击显示缩小 */
+    .combo-display-3d {
+        padding: 6px 12px;
+        border-radius: 15px;
+    }
+
+    .combo-fire {
+        font-size: 1.1rem;
+    }
+
+    .combo-count {
+        font-size: 1.1rem;
+    }
+
+    /* 波数标识缩小 */
+    .level-badge-3d {
+        padding: 6px 14px;
+        border-radius: 20px;
+    }
+
+    .level-num {
+        font-size: 1.3rem;
+    }
+
+    .level-prefix, .level-suffix {
+        font-size: 0.65rem;
+    }
+
+    /* 时间面板缩小 */
+    .time-panel-3d {
+        transform: none;
+    }
+
+    .time-ring-3d {
+        width: 60px;
+        height: 60px;
+    }
+
+    .time-value-3d {
+        font-size: 1.3rem;
+    }
+
+    .time-unit {
+        font-size: 0.5rem;
+    }
+
+    /* 技能栏优化 */
+    .skill-bar-3d {
+        bottom: 90px;
+        gap: 12px;
+        padding: 8px 15px;
+    }
+
+    .skill-btn-3d {
+        width: 55px;
+        height: 55px;
+    }
+
+    .skill-icon-3d {
+        font-size: 1.4rem;
+    }
+
+    .skill-name {
+        font-size: 0.55rem;
+    }
+
+    .skill-key {
+        display: none;
+    }
+
+    /* Buff状态栏 */
+    .status-bar-3d {
+        top: auto;
+        bottom: 160px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        flex-direction: row;
+    }
+
+    .buff-item-3d {
+        padding: 4px 10px;
+        font-size: 0.7rem;
+    }
+
+    /* 触摸区域优化 */
+    .touch-indicator {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        bottom: 180px;
+        opacity: 0.6;
+    }
+
+    .touch-zone.left .touch-indicator { left: 15px; }
+    .touch-zone.right .touch-indicator { right: 15px; }
+
+    .touch-zone::after {
+        bottom: 150px;
+        font-size: 0.65rem;
+    }
+}
+
+/* 更小屏幕优化 */
 @media (max-width: 420px) {
     .title-char-3d {
         font-size: 3rem;
@@ -2209,14 +2342,61 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 
+    /* 游戏HUD进一步缩小 */
+    .game-hud-3d {
+        padding: 8px 10px;
+    }
+
+    .score-panel-3d {
+        padding: 6px 10px;
+        min-width: 80px;
+    }
+
+    .score-value-3d {
+        font-size: 1.2rem;
+    }
+
+    .time-ring-3d {
+        width: 50px;
+        height: 50px;
+    }
+
+    .time-value-3d {
+        font-size: 1.1rem;
+    }
+
+    .level-badge-3d {
+        padding: 4px 10px;
+    }
+
+    .level-num {
+        font-size: 1.1rem;
+    }
+
     .skill-bar-3d {
         bottom: 80px;
-        gap: 15px;
+        gap: 10px;
+        padding: 6px 12px;
     }
 
     .skill-btn-3d {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
+    }
+
+    .skill-icon-3d {
+        font-size: 1.2rem;
+    }
+
+    .touch-indicator {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+        bottom: 150px;
+    }
+
+    .touch-zone::after {
+        bottom: 120px;
     }
 
     .score-orb {
@@ -2230,6 +2410,51 @@ body {
 
     .stats-panel-3d {
         grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* 超小屏幕 */
+@media (max-width: 360px) {
+    .game-hud-3d {
+        padding: 6px 8px;
+    }
+
+    .score-panel-3d {
+        padding: 5px 8px;
+        min-width: 70px;
+    }
+
+    .score-icon {
+        font-size: 1rem;
+    }
+
+    .score-value-3d {
+        font-size: 1rem;
+    }
+
+    .time-ring-3d {
+        width: 45px;
+        height: 45px;
+    }
+
+    .level-badge-3d {
+        display: none;
+    }
+
+    .skill-bar-3d {
+        bottom: 70px;
+        gap: 8px;
+    }
+
+    .skill-btn-3d {
+        width: 45px;
+        height: 45px;
+    }
+
+    .touch-indicator {
+        width: 45px;
+        height: 45px;
+        bottom: 130px;
     }
 }
 
