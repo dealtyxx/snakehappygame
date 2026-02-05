@@ -301,7 +301,9 @@ const AudioSystem = {
     // 添加新音乐时，只需在此数组中添加文件路径即可
     bgmList: [
         'assets/1.mp3',
-        'assets/2.mp3'
+        'assets/2.mp3',
+        'assets/3.mp3',
+        'assets/4.mp3'
     ],
 
     init() {
@@ -323,29 +325,27 @@ const AudioSystem = {
 
             // 解锁 Web Audio Context
             if (this.context && this.context.state === 'suspended') {
-                this.context.resume();
+                this.context.resume().then(() => {
+                    console.log('📱 Web Audio Context 已恢复');
+                });
             }
 
-            // 解锁 HTML5 Audio 元素
-            if (this.bgm) {
-                // 创建一个静音播放来解锁
-                this.bgm.muted = true;
-                const playPromise = this.bgm.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        this.bgm.pause();
-                        this.bgm.muted = false;
-                        this.bgm.currentTime = 0;
-                        this.audioUnlocked = true;
-                        console.log('📱 移动端音频已解锁');
-                    }).catch(() => {});
-                }
-            }
+            // 标记为已解锁（不再尝试静音播放，避免干扰正常播放）
+            this.audioUnlocked = true;
+            console.log('📱 音频交互已解锁');
         };
 
-        // 监听多种用户交互事件
-        ['touchstart', 'touchend', 'click', 'keydown'].forEach(event => {
-            document.addEventListener(event, unlockAudio, { once: false, passive: true });
+        // 监听用户交互事件（只需要一次）
+        const events = ['touchstart', 'touchend', 'click', 'keydown'];
+        const unlockOnce = () => {
+            unlockAudio();
+            // 解锁后移除所有监听器
+            events.forEach(event => {
+                document.removeEventListener(event, unlockOnce);
+            });
+        };
+        events.forEach(event => {
+            document.addEventListener(event, unlockOnce, { passive: true });
         });
     },
 
@@ -419,7 +419,7 @@ const AudioSystem = {
         }
     },
 
-    // 播放背景音乐
+    // 播放背景音乐（每次开始游戏随机选择）
     playBGM() {
         if (!state.soundEnabled) return;
 
@@ -429,17 +429,17 @@ const AudioSystem = {
                 this.context.resume();
             }
 
-            // 重置播放位置
-            this.bgm.currentTime = 0;
-            this.bgm.muted = false;
+            // 🎲 每次播放时随机选择新的BGM
+            this.selectRandomBGM();
 
             // 📱 多次尝试播放（移动端兼容）
             const attemptPlay = (retryCount = 0) => {
+                this.bgm.muted = false;
                 const playPromise = this.bgm.play();
 
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
-                        console.log('🎵 BGM开始播放');
+                        console.log('🎵 BGM开始播放:', this.bgmList[this.currentBgmIndex]);
                     }).catch(e => {
                         console.log('播放尝试 #' + (retryCount + 1) + ':', e.message);
 
@@ -448,7 +448,6 @@ const AudioSystem = {
                             console.log('BGM尚未加载完成，等待加载后播放...');
                             const playOnLoad = () => {
                                 if (state.isRunning && state.soundEnabled) {
-                                    this.bgm.currentTime = 0;
                                     this.bgm.play().then(() => {
                                         console.log('🎵 BGM加载完成后开始播放');
                                     }).catch(err => {
@@ -468,6 +467,24 @@ const AudioSystem = {
 
             attemptPlay();
         }
+    },
+
+    // 🎲 随机选择BGM（不重新加载，只更换源）
+    selectRandomBGM() {
+        if (this.bgmList.length === 0) return;
+
+        // 随机选择一个索引
+        this.currentBgmIndex = Math.floor(Math.random() * this.bgmList.length);
+        const bgmSrc = this.bgmList[this.currentBgmIndex];
+
+        // 如果当前源不同，才重新加载
+        if (this.bgm.src !== bgmSrc && !this.bgm.src.endsWith(bgmSrc)) {
+            this.bgmLoaded = false;
+            this.bgm.src = bgmSrc;
+            this.bgm.load();
+            console.log('🎲 随机选择BGM:', bgmSrc);
+        }
+        this.bgm.currentTime = 0;
     },
 
     // 停止背景音乐
