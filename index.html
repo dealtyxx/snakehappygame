@@ -8,7 +8,8 @@
 </head>
 <body>
     <!-- 背景音乐 - 随机加载assets文件夹中的音乐 -->
-    <audio id="bgm" loop preload="auto"></audio>
+    <!-- 📱 添加 playsinline 属性支持移动端播放 -->
+    <audio id="bgm" loop preload="auto" playsinline webkit-playsinline></audio>
 
     <!-- 屏幕闪光效果 -->
     <div id="screen-flash" class="screen-flash"></div>

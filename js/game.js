@@ -295,6 +295,7 @@ const AudioSystem = {
     sounds: {},
     bgmLoaded: false,
     currentBgmIndex: -1,
+    audioUnlocked: false, // 📱 移动端音频解锁标记
 
     // 可用的BGM文件列表（放在assets文件夹中）
     // 添加新音乐时，只需在此数组中添加文件路径即可
@@ -308,9 +309,44 @@ const AudioSystem = {
             this.context = new (window.AudioContext || window.webkitAudioContext)();
             // 初始化BGM
             this.initBGM();
+            // 📱 移动端：添加触摸事件解锁音频
+            this.setupMobileAudioUnlock();
         } catch (e) {
             console.warn('Web Audio API 不支持');
         }
+    },
+
+    // 📱 移动端音频解锁
+    setupMobileAudioUnlock() {
+        const unlockAudio = () => {
+            if (this.audioUnlocked) return;
+
+            // 解锁 Web Audio Context
+            if (this.context && this.context.state === 'suspended') {
+                this.context.resume();
+            }
+
+            // 解锁 HTML5 Audio 元素
+            if (this.bgm) {
+                // 创建一个静音播放来解锁
+                this.bgm.muted = true;
+                const playPromise = this.bgm.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        this.bgm.pause();
+                        this.bgm.muted = false;
+                        this.bgm.currentTime = 0;
+                        this.audioUnlocked = true;
+                        console.log('📱 移动端音频已解锁');
+                    }).catch(() => {});
+                }
+            }
+        };
+
+        // 监听多种用户交互事件
+        ['touchstart', 'touchend', 'click', 'keydown'].forEach(event => {
+            document.addEventListener(event, unlockAudio, { once: false, passive: true });
+        });
     },
 
     // 初始化背景音乐（随机选择）
@@ -319,6 +355,9 @@ const AudioSystem = {
         if (this.bgm) {
             this.bgm.volume = 0.3;
             this.bgm.loop = true;
+            // 📱 移动端：设置 playsinline 属性
+            this.bgm.setAttribute('playsinline', '');
+            this.bgm.setAttribute('webkit-playsinline', '');
 
             // 随机选择一个BGM
             this.loadRandomBGM();
@@ -385,38 +424,49 @@ const AudioSystem = {
         if (!state.soundEnabled) return;
 
         if (this.bgm) {
-            // 关键：在用户交互时立即尝试播放，解锁Chrome自动播放限制
-            // 即使音频还没加载完，也要调用play()来解锁音频元素
-            this.bgm.currentTime = 0;
-
-            // 立即尝试播放（解锁音频元素）
-            const playPromise = this.bgm.play();
-
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log('BGM开始播放');
-                }).catch(e => {
-                    // 如果还没加载完，这里会失败，但音频元素已经被解锁了
-                    console.log('首次播放尝试:', e.message);
-
-                    // 如果是因为没加载完，设置加载完成后自动播放
-                    if (!this.bgmLoaded) {
-                        console.log('BGM尚未加载完成，等待加载后播放...');
-                        const playOnLoad = () => {
-                            if (state.isRunning && state.soundEnabled) {
-                                this.bgm.currentTime = 0;
-                                this.bgm.play().then(() => {
-                                    console.log('BGM加载完成后开始播放');
-                                }).catch(err => {
-                                    console.warn('BGM播放失败:', err);
-                                });
-                            }
-                            this.bgm.removeEventListener('canplaythrough', playOnLoad);
-                        };
-                        this.bgm.addEventListener('canplaythrough', playOnLoad);
-                    }
-                });
+            // 📱 确保 Web Audio Context 已恢复
+            if (this.context && this.context.state === 'suspended') {
+                this.context.resume();
             }
+
+            // 重置播放位置
+            this.bgm.currentTime = 0;
+            this.bgm.muted = false;
+
+            // 📱 多次尝试播放（移动端兼容）
+            const attemptPlay = (retryCount = 0) => {
+                const playPromise = this.bgm.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log('🎵 BGM开始播放');
+                    }).catch(e => {
+                        console.log('播放尝试 #' + (retryCount + 1) + ':', e.message);
+
+                        // 如果是因为没加载完，等待加载后播放
+                        if (!this.bgmLoaded && retryCount < 3) {
+                            console.log('BGM尚未加载完成，等待加载后播放...');
+                            const playOnLoad = () => {
+                                if (state.isRunning && state.soundEnabled) {
+                                    this.bgm.currentTime = 0;
+                                    this.bgm.play().then(() => {
+                                        console.log('🎵 BGM加载完成后开始播放');
+                                    }).catch(err => {
+                                        console.warn('BGM播放失败:', err);
+                                    });
+                                }
+                                this.bgm.removeEventListener('canplaythrough', playOnLoad);
+                            };
+                            this.bgm.addEventListener('canplaythrough', playOnLoad);
+                        } else if (retryCount < 2) {
+                            // 📱 移动端：延迟重试
+                            setTimeout(() => attemptPlay(retryCount + 1), 100);
+                        }
+                    });
+                }
+            };
+
+            attemptPlay();
         }
     },
 

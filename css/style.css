@@ -5269,11 +5269,11 @@ body {
         font-size: 1.2rem;
     }
 
-    /* 修复触摸区域覆盖问题 */
+    /* 修复触摸区域覆盖问题 - 覆盖到屏幕底部 */
     .touch-zone {
         position: fixed;
         top: 0;
-        bottom: 120px;
+        bottom: 0;
         z-index: 50;
         background: transparent;
     }
@@ -5290,32 +5290,32 @@ body {
         width: auto;
     }
 
-    /* 确保触摸指示器显示 */
+    /* 触摸指示器放在页面最底部 */
     .touch-indicator {
         position: absolute;
-        bottom: 50%;
-        transform: translateY(50%);
+        bottom: 15px;
+        transform: none;
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: rgba(255, 215, 0, 0.2);
-        border: 2px solid rgba(255, 215, 0, 0.4);
+        background: rgba(255, 215, 0, 0.25);
+        border: 2px solid rgba(255, 215, 0, 0.5);
         display: flex;
         justify-content: center;
         align-items: center;
         font-size: 1.5rem;
-        color: rgba(255, 215, 0, 0.8);
+        color: rgba(255, 215, 0, 0.9);
         pointer-events: none;
         animation: touchPulse 2s ease-in-out infinite;
     }
 
     .touch-zone.left .touch-indicator {
-        left: 20px;
+        left: 30px;
         right: auto;
     }
 
     .touch-zone.right .touch-indicator {
-        right: 20px;
+        right: 30px;
         left: auto;
     }
 
@@ -5337,21 +5337,22 @@ body {
 /* 小屏幕手机进一步优化 */
 @media (max-width: 480px) {
     .touch-zone {
-        bottom: 100px;
+        bottom: 0;
     }
 
     .touch-indicator {
+        bottom: 12px;
         width: 50px;
         height: 50px;
         font-size: 1.3rem;
     }
 
     .touch-zone.left .touch-indicator {
-        left: 15px;
+        left: 25px;
     }
 
     .touch-zone.right .touch-indicator {
-        right: 15px;
+        right: 25px;
     }
 
     .achievement-toast-3d {
@@ -5381,21 +5382,22 @@ body {
 /* 超小屏幕 */
 @media (max-width: 360px) {
     .touch-zone {
-        bottom: 90px;
+        bottom: 0;
     }
 
     .touch-indicator {
+        bottom: 10px;
         width: 44px;
         height: 44px;
         font-size: 1.1rem;
     }
 
     .touch-zone.left .touch-indicator {
-        left: 10px;
+        left: 20px;
     }
 
     .touch-zone.right .touch-indicator {
-        right: 10px;
+        right: 20px;
     }
 
     .achievement-toast-3d {
