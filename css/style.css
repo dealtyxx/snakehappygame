@@ -4108,3 +4108,784 @@ body {
         font-size: 0.7rem;
     }
 }
+
+/* ================================================================
+   📱📱📱 移动端深度优化 - 全面适配 📱📱📱
+================================================================ */
+
+/* === 通用移动端优化 === */
+@media (max-width: 768px) {
+    /* 开始页面整体布局 */
+    #start-screen {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    .content-3d {
+        padding: 15px 10px 30px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* 学院标识缩小 */
+    .college-badge {
+        margin-bottom: 10px;
+    }
+
+    .badge-inner {
+        padding: 8px 15px;
+        gap: 8px;
+    }
+
+    .badge-icon {
+        font-size: 1.5rem;
+    }
+
+    .college-name {
+        font-size: 0.85rem;
+    }
+
+    .department-name {
+        font-size: 0.7rem;
+    }
+
+    /* 标题缩小 */
+    .title-3d-container {
+        margin: 15px 0;
+    }
+
+    .year-ribbon {
+        padding: 4px 15px;
+        font-size: 0.75rem;
+    }
+
+    .game-title-3d {
+        gap: 5px;
+    }
+
+    .title-char-3d {
+        font-size: 2.8rem;
+    }
+
+    /* 蛇形Logo隐藏或缩小 */
+    .snake-logo-3d {
+        margin: 10px 0;
+    }
+
+    .segment {
+        font-size: 3rem;
+    }
+
+    /* 最高分卡片 */
+    .high-score-card-3d {
+        margin-bottom: 10px;
+    }
+
+    .card-face {
+        padding: 8px 15px;
+        gap: 8px;
+    }
+
+    .hs-label {
+        font-size: 0.7rem;
+    }
+
+    .hs-value {
+        font-size: 1.3rem;
+    }
+
+    /* 玩法说明缩小 */
+    .instruction-card-3d {
+        padding: 12px;
+        margin: 10px 0;
+    }
+
+    .instruction-title {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+
+    .item-row {
+        gap: 8px;
+    }
+
+    .item-desc {
+        font-size: 0.6rem;
+    }
+
+    .item-emoji {
+        font-size: 1.3rem;
+    }
+
+    /* 开始按钮 */
+    .btn-start-3d {
+        padding: 15px 40px;
+        font-size: 1.2rem;
+    }
+
+    .btn-content {
+        gap: 8px;
+    }
+
+    .fullscreen-hint {
+        font-size: 0.7rem;
+        margin-top: 5px;
+    }
+
+    /* 音效开关 */
+    .sound-toggle {
+        margin: 8px 0;
+    }
+
+    .sound-btn {
+        padding: 8px 15px;
+        font-size: 0.8rem;
+    }
+
+    /* 操作提示 */
+    .control-hints-3d {
+        gap: 10px;
+        font-size: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .hint-card {
+        padding: 6px 12px;
+    }
+
+    /* 底部波浪隐藏 */
+    .wave-3d-container {
+        display: none;
+    }
+
+    /* 底部学院标识 */
+    .footer-college {
+        font-size: 0.7rem;
+        padding: 10px 0;
+    }
+
+    /* 灯笼缩小 */
+    .lantern-string {
+        gap: 15px;
+    }
+
+    .lantern-3d {
+        transform: scale(0.7);
+    }
+}
+
+/* === 小屏手机深度优化 (≤480px) === */
+@media (max-width: 480px) {
+    .content-3d {
+        padding: 10px 8px 25px;
+    }
+
+    /* 学院标识进一步缩小 */
+    .badge-inner {
+        padding: 6px 12px;
+        gap: 6px;
+    }
+
+    .badge-icon {
+        font-size: 1.2rem;
+    }
+
+    .college-name {
+        font-size: 0.75rem;
+    }
+
+    .department-name {
+        font-size: 0.6rem;
+    }
+
+    /* 标题更小 */
+    .year-ribbon {
+        padding: 3px 12px;
+        font-size: 0.65rem;
+    }
+
+    .title-char-3d {
+        font-size: 2.3rem;
+    }
+
+    /* 蛇形Logo在小屏幕隐藏 */
+    .snake-logo-3d {
+        display: none;
+    }
+
+    /* 最高分 */
+    .card-face {
+        padding: 6px 12px;
+    }
+
+    .hs-value {
+        font-size: 1.1rem;
+    }
+
+    /* 玩法说明紧凑 */
+    .instruction-card-3d {
+        padding: 10px;
+        margin: 8px 0;
+    }
+
+    .item-row {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+
+    .item-emoji {
+        font-size: 1.1rem;
+    }
+
+    .item-desc {
+        font-size: 0.55rem;
+    }
+
+    /* 开始按钮 */
+    .btn-start-3d {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+
+    /* 控制提示更紧凑 */
+    .control-hints-3d {
+        gap: 6px;
+        font-size: 0.65rem;
+    }
+
+    .hint-card {
+        padding: 4px 8px;
+    }
+
+    .hint-icon {
+        font-size: 0.9rem;
+    }
+
+    /* 灯笼隐藏 */
+    .lantern-string {
+        display: none;
+    }
+}
+
+/* === 超小屏幕 (≤360px) === */
+@media (max-width: 360px) {
+    .content-3d {
+        padding: 8px 5px 20px;
+    }
+
+    .college-badge {
+        margin-bottom: 5px;
+    }
+
+    .badge-inner {
+        padding: 5px 10px;
+    }
+
+    .badge-icon {
+        font-size: 1rem;
+    }
+
+    .college-name {
+        font-size: 0.65rem;
+    }
+
+    .department-name {
+        font-size: 0.55rem;
+    }
+
+    .title-3d-container {
+        margin: 10px 0;
+    }
+
+    .year-ribbon {
+        font-size: 0.6rem;
+        padding: 2px 10px;
+    }
+
+    .title-char-3d {
+        font-size: 2rem;
+    }
+
+    .high-score-card-3d {
+        margin-bottom: 8px;
+    }
+
+    .hs-label {
+        font-size: 0.6rem;
+    }
+
+    .hs-value {
+        font-size: 1rem;
+    }
+
+    .instruction-card-3d {
+        padding: 8px;
+    }
+
+    .instruction-title {
+        font-size: 0.75rem;
+    }
+
+    .item-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .btn-start-3d {
+        padding: 10px 25px;
+        font-size: 0.9rem;
+        border-radius: 30px;
+    }
+
+    .control-hints-3d {
+        display: none;
+    }
+
+    .footer-college {
+        font-size: 0.6rem;
+    }
+}
+
+/* === 游戏页面移动端深度优化 === */
+@media (max-width: 768px) {
+    #game-screen {
+        touch-action: none;
+    }
+
+    /* 触摸区域透明度降低 */
+    .touch-zone {
+        background: transparent;
+    }
+
+    .touch-indicator {
+        background: rgba(255, 215, 0, 0.15);
+        border: 2px solid rgba(255, 215, 0, 0.3);
+    }
+
+    /* 暂停按钮 */
+    .pause-btn-3d {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* HUD更紧凑 */
+    .game-hud-3d {
+        padding: 8px;
+    }
+
+    .hud-left-3d, .hud-right-3d {
+        gap: 5px;
+    }
+
+    .score-content {
+        gap: 6px;
+    }
+
+    .panel-glow {
+        display: none;
+    }
+
+    .time-glow {
+        display: none;
+    }
+
+    .level-glow {
+        display: none;
+    }
+
+    /* 技能栏更小 */
+    .skill-bar-3d {
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+    .skill-glow {
+        display: none;
+    }
+
+    /* 触摸指示器更淡 */
+    .touch-indicator {
+        opacity: 0.4;
+    }
+
+    .touch-zone::after {
+        display: none;
+    }
+}
+
+@media (max-width: 360px) {
+    .game-hud-3d {
+        padding: 5px;
+    }
+
+    .score-panel-3d {
+        padding: 4px 8px;
+        border-width: 1px;
+    }
+
+    .score-icon {
+        display: none;
+    }
+
+    .time-ring-3d {
+        width: 40px;
+        height: 40px;
+    }
+
+    .skill-bar-3d {
+        gap: 5px;
+        padding: 4px 8px;
+    }
+
+    .skill-btn-3d {
+        width: 40px;
+        height: 40px;
+    }
+
+    .skill-icon-3d {
+        font-size: 1rem;
+    }
+
+    .skill-name {
+        display: none;
+    }
+}
+
+/* === 结束页面移动端深度优化 === */
+@media (max-width: 768px) {
+    .end-page-container {
+        padding: 15px 12px 30px;
+    }
+
+    .hero-section {
+        padding: 10px 0;
+    }
+
+    .score-display-new {
+        margin-bottom: 10px;
+    }
+
+    .score-number {
+        font-size: 3.5rem;
+    }
+
+    .score-unit {
+        font-size: 1rem;
+    }
+
+    .score-rank {
+        font-size: 1.5rem;
+        padding: 4px 15px;
+    }
+
+    .stats-bar {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    .stat-item {
+        font-size: 0.75rem;
+    }
+
+    .blessing-section {
+        padding: 10px 0;
+    }
+
+    .blessing-card-new {
+        padding: 15px 12px;
+    }
+
+    .blessing-text {
+        font-size: 1rem;
+    }
+
+    .lucky-section {
+        padding: 15px 0;
+    }
+
+    .lucky-box {
+        width: 90px;
+        height: 110px;
+    }
+
+    .social-section {
+        padding: 10px 0;
+    }
+
+    .social-buttons {
+        gap: 8px;
+    }
+
+    .share-btn {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
+
+    .action-section {
+        padding: 10px 0;
+    }
+
+    .action-buttons {
+        gap: 10px;
+    }
+
+    .action-btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+
+    .footer-section {
+        padding: 10px 0;
+    }
+
+    .footer-badge {
+        font-size: 1.5rem;
+    }
+
+    .footer-college-name {
+        font-size: 0.75rem;
+    }
+
+    .footer-slogan {
+        font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .end-page-container {
+        padding: 12px 10px 25px;
+        gap: 15px;
+    }
+
+    .score-number {
+        font-size: 3rem;
+    }
+
+    .stats-bar {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .stat-item {
+        font-size: 0.7rem;
+    }
+
+    .blessing-text {
+        font-size: 0.9rem;
+    }
+
+    .lucky-box {
+        width: 80px;
+        height: 100px;
+    }
+
+    .reward-icon {
+        font-size: 2.5rem;
+    }
+
+    .reward-title {
+        font-size: 1rem;
+    }
+
+    .reward-desc {
+        font-size: 0.75rem;
+    }
+
+    .social-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .share-btn {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 100px;
+    }
+
+    .action-btn {
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .end-page-container {
+        padding: 10px 8px 20px;
+        gap: 12px;
+    }
+
+    .score-number {
+        font-size: 2.5rem;
+    }
+
+    .score-rank {
+        font-size: 1.2rem;
+        padding: 3px 12px;
+    }
+
+    .stats-bar {
+        padding: 8px 10px;
+    }
+
+    .stat-item {
+        font-size: 0.65rem;
+    }
+
+    .blessing-card-new {
+        padding: 12px 10px;
+    }
+
+    .blessing-text {
+        font-size: 0.85rem;
+    }
+
+    .lucky-box {
+        width: 70px;
+        height: 90px;
+    }
+
+    .share-btn {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+    }
+
+    .action-btn {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+
+    .leaderboard-section {
+        padding: 10px;
+    }
+
+    .lb-title {
+        font-size: 0.9rem;
+    }
+
+    .lb-row {
+        padding: 6px 8px;
+    }
+}
+
+/* === 横屏模式优化 === */
+@media (max-height: 500px) and (orientation: landscape) {
+    /* 开始页面横屏 */
+    .content-3d {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .college-badge {
+        order: 1;
+        width: 100%;
+    }
+
+    .title-3d-container {
+        order: 2;
+        margin: 5px 0;
+    }
+
+    .title-char-3d {
+        font-size: 2rem;
+    }
+
+    .snake-logo-3d,
+    .instruction-card-3d,
+    .high-score-card-3d {
+        display: none;
+    }
+
+    .btn-start-3d {
+        order: 3;
+        margin: 10px;
+    }
+
+    .control-hints-3d {
+        display: none;
+    }
+
+    /* 游戏页面横屏 */
+    .game-hud-3d {
+        padding: 5px 15px;
+    }
+
+    .skill-bar-3d {
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .touch-indicator {
+        bottom: 50%;
+        transform: translateY(50%);
+    }
+
+    .touch-zone.left .touch-indicator { left: 10px; }
+    .touch-zone.right .touch-indicator { right: 10px; }
+
+    .touch-zone::after {
+        display: none;
+    }
+
+    /* 结束页面横屏 */
+    .end-page-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 100%;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .hero-section {
+        width: 40%;
+        padding: 5px;
+    }
+
+    .blessing-section {
+        width: 55%;
+        padding: 5px;
+    }
+
+    .lucky-section,
+    .social-section {
+        width: 45%;
+    }
+
+    .leaderboard-section {
+        width: 100%;
+    }
+}
+
+/* === iOS安全区域适配 === */
+@supports (padding: max(0px)) {
+    .game-hud-3d {
+        padding-top: max(10px, env(safe-area-inset-top));
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+    }
+
+    .skill-bar-3d {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+
+    .end-page-container {
+        padding-bottom: max(30px, env(safe-area-inset-bottom));
+    }
+
+    .touch-indicator {
+        bottom: max(100px, calc(100px + env(safe-area-inset-bottom)));
+    }
+}
+
+/* === 高分辨率屏幕优化 === */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .score-panel-3d,
+    .time-ring-3d,
+    .skill-btn-3d {
+        border-width: 1px;
+    }
+}
